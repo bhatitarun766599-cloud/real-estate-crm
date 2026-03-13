@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Employee Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+<div class="bg-white p-6 rounded shadow w-80">
+
+<h2 class="text-xl font-bold mb-4">Employee Login</h2>
+
+<input id="email" placeholder="Email"
+class="border p-2 w-full mb-2">
+
+<input id="password" type="password"
+placeholder="Password"
+class="border p-2 w-full mb-4">
+
+<button onclick="login()"
+class="bg-blue-500 text-white w-full p-2 rounded">
+
+Login
+
+</button>
+
+</div>
+
+<script>
+
+async function login(){
+
+ const email=document.getElementById("email").value
+ const password=document.getElementById("password").value
+
+ const res = await fetch(
+ "http://localhost:3000/employees/login",
+ {
+
+ method:"POST",
+
+ headers:{
+ "Content-Type":"application/json"
+ },
+
+ body:JSON.stringify({email,password})
+
+ })
+
+ const data = await res.json()
+
+ if(data.id){
+
+ localStorage.setItem("employee_id",data.id)
+
+ window.location="employee-dashboard.html"
+
+ }
+
+ else{
+
+ alert("Login failed")
+
+ }
+
+}
+
+</script>
+
+</body>
+</html>

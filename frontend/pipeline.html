@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lead Pipeline</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-4">
+
+<h1 class="text-2xl font-bold mb-4">Lead Pipeline</h1>
+
+<div class="flex gap-4 overflow-x-auto">
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">New Lead</h2>
+<div id="New Lead" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Contacted</h2>
+<div id="Contacted" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Follow-up</h2>
+<div id="Follow-up" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Interested</h2>
+<div id="Interested" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Deal in Progress</h2>
+<div id="Deal in Progress" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Deal Closed</h2>
+<div id="Deal Closed" class="pipeline space-y-2"></div>
+</div>
+
+<div class="bg-white p-3 rounded shadow w-64">
+<h2 class="font-bold mb-2">Lost Lead</h2>
+<div id="Lost Lead" class="pipeline space-y-2"></div>
+</div>
+
+</div>
+
+<script>
+
+let draggedLead = null
+
+async function loadPipeline(){
+
+const res = await fetch("http://localhost:3000/leads/all")
+const leads = await res.json()
+
+document.querySelectorAll(".pipeline").forEach(col=>{
+col.innerHTML=""
+})
+
+leads.forEach(lead=>{
+
+const card=document.createElement("div")
+
+card.className="bg-blue-100 p-2 rounded shadow cursor-move"
+card.draggable=true
+
+card.innerHTML=`
+<strong>${lead.name}</strong><br>
+${lead.phone}<br>
+${lead.city}
+`
+
+card.addEventListener("dragstart",()=>{
+draggedLead=lead.id
+})
+
+const column=document.getElementById(lead.status)
+
+if(column){
+column.appendChild(card)
+}
+
+})
+
+}
+
+document.querySelectorAll(".pipeline").forEach(col=>{
+
+col.addEventListener("dragover",(e)=>{
+e.preventDefault()
+})
+
+col.addEventListener("drop",async function(){
+
+const status=this.id
+
+await fetch(`http://localhost:3000/leads/status/${draggedLead}`,{
+
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({status})
+
+})
+
+loadPipeline()
+
+})
+
+})
+
+loadPipeline()
+
+</script>
+
+</body>
+</html>

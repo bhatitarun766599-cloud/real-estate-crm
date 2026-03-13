@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Employee Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+<h1 class="text-2xl font-bold mb-4">My Leads</h1>
+
+<table class="w-full border">
+
+<thead>
+
+<tr class="bg-gray-200">
+
+<th class="p-2">Name</th>
+<th class="p-2">Phone</th>
+<th class="p-2">City</th>
+<th class="p-2">Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="leadTable"></tbody>
+
+</table>
+
+<script>
+
+async function loadLeads(){
+
+ const employee = localStorage.getItem("employee_id")
+
+ const res = await fetch(
+ `http://localhost:3000/leads/employee/${employee}`
+ )
+
+ const leads = await res.json()
+
+ const table=document.getElementById("leadTable")
+
+ table.innerHTML=""
+
+ leads.forEach(l=>{
+
+ table.innerHTML+=`
+
+<tr>
+
+<td class="border p-2">${l.name}</td>
+<td class="border p-2">${l.phone}</td>
+<td class="border p-2">${l.city}</td>
+<td class="border p-2">${l.status}</td>
+
+</tr>
+
+`
+
+ })
+
+}
+
+loadLeads()
+
+</script>
+
+</body>
+</html>

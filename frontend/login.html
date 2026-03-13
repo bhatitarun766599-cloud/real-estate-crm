@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CRM Login</title>
+</head>
+
+<body>
+
+<h2>CRM Login</h2>
+
+<input id="email" placeholder="Email">
+<br><br>
+
+<input id="password" type="password" placeholder="Password">
+<br><br>
+
+<button onclick="login()">Login</button>
+
+<script>
+
+function login(){
+
+ const email = document.getElementById("email").value;
+ const password = document.getElementById("password").value;
+
+ fetch("http://localhost:3000/auth/login",{
+  method:"POST",
+  headers:{
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+   email:email,
+   password:password
+  })
+ })
+ .then(res => res.json())
+ .then(data => {
+
+  console.log(data);
+
+  alert("Response: " + JSON.stringify(data));
+
+ })
+ .catch(err => {
+
+  console.log(err);
+  alert("Error connecting to server");
+
+ });
+
+}
+
+</script>
+
+</body>
+</html>

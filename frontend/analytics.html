@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CRM Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+<h1 class="text-2xl font-bold mb-6">CRM Analytics Dashboard</h1>
+
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+<div class="bg-white p-4 rounded shadow">
+<p>Total Leads</p>
+<h2 id="total" class="text-2xl font-bold"></h2>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+<p>Today's Leads</p>
+<h2 id="today" class="text-2xl font-bold"></h2>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+<p>Interested Leads</p>
+<h2 id="interested" class="text-2xl font-bold"></h2>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+<p>Deals Closed</p>
+<h2 id="closed" class="text-2xl font-bold"></h2>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+<p>Lost Leads</p>
+<h2 id="lost" class="text-2xl font-bold"></h2>
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+<p>Conversion Rate</p>
+<h2 id="conversion" class="text-2xl font-bold"></h2>
+</div>
+
+</div>
+
+<script>
+
+async function loadAnalytics(){
+
+ const res = await fetch("http://localhost:3000/leads/analytics");
+
+ const data = await res.json();
+
+ document.getElementById("total").innerText = data.total;
+
+ document.getElementById("today").innerText = data.today;
+
+ document.getElementById("interested").innerText = data.interested;
+
+ document.getElementById("closed").innerText = data.closed;
+
+ document.getElementById("lost").innerText = data.lost;
+
+ const conversion = (data.closed / data.total * 100).toFixed(1);
+
+ document.getElementById("conversion").innerText = conversion + "%";
+
+}
+
+loadAnalytics();
+
+</script>
+
+</body>
+</html>

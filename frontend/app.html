@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CRM App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100 flex">
+
+<!-- SIDEBAR -->
+
+<div class="w-64 bg-gray-900 text-white min-h-screen p-4">
+
+<h2 class="text-xl font-bold mb-6">Real Estate CRM</h2>
+
+<ul class="space-y-3">
+
+<li>
+<button onclick="loadPage('dashboard.html')" class="w-full text-left">
+Dashboard
+</button>
+</li>
+
+<li>
+<button onclick="loadPage('pipeline.html')" class="w-full text-left">
+Pipeline
+</button>
+</li>
+
+<li>
+<button onclick="loadPage('employees.html')" class="w-full text-left">
+Employees
+</button>
+</li>
+
+<li>
+<button onclick="loadPage('analytics.html')" class="w-full text-left">
+Analytics
+</button>
+</li>
+
+</ul>
+
+</div>
+
+<!-- MAIN CONTENT -->
+
+<div class="flex-1 p-6">
+
+<iframe
+id="contentFrame"
+src="dashboard.html"
+class="w-full h-screen border rounded">
+</iframe>
+
+</div>
+
+<script>
+
+function loadPage(page){
+
+document.getElementById("contentFrame").src = page
+
+}
+
+</script>
+
+</body>
+</html>

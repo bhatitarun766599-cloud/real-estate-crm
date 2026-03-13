@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Employees</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+<h1 class="text-2xl font-bold mb-4">Employee Management</h1>
+
+<div class="bg-white p-4 rounded shadow mb-6">
+
+<input id="name" placeholder="Name" class="border p-2 mr-2">
+<input id="email" placeholder="Email" class="border p-2 mr-2">
+<input id="password" placeholder="Password" class="border p-2 mr-2">
+
+<button onclick="addEmployee()" class="bg-blue-500 text-white px-4 py-2 rounded">
+Add Employee
+</button>
+
+</div>
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="text-xl mb-2">Employees</h2>
+
+<ul id="employeeList"></ul>
+
+</div>
+
+<script>
+
+async function addEmployee(){
+
+ const name=document.getElementById("name").value
+ const email=document.getElementById("email").value
+ const password=document.getElementById("password").value
+
+ await fetch("http://localhost:3000/employees/add",{
+
+ method:"POST",
+ headers:{
+ "Content-Type":"application/json"
+ },
+
+ body:JSON.stringify({name,email,password})
+
+ })
+
+ loadEmployees()
+
+}
+
+async function loadEmployees(){
+
+ const res = await fetch("http://localhost:3000/employees/all")
+
+ const employees = await res.json()
+
+ const list=document.getElementById("employeeList")
+
+ list.innerHTML=""
+
+ employees.forEach(e=>{
+
+ list.innerHTML+=`<li>${e.name} - ${e.email}</li>`
+
+ })
+
+}
+
+loadEmployees()
+
+</script>
+
+</body>
+</html>
