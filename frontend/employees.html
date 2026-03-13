@@ -37,7 +37,7 @@ async function addEmployee(){
  const email=document.getElementById("email").value
  const password=document.getElementById("password").value
 
- await fetch("http://localhost:3000/employees/add",{
+ await fetch("https://real-estate-crm.onrender.com/employees/add",{
 
  method:"POST",
  headers:{
@@ -54,7 +54,7 @@ async function addEmployee(){
 
 async function loadEmployees(){
 
- const res = await fetch("http://localhost:3000/employees/all")
+ const res = await fetch("https://real-estate-crm.onrender.com/employees/all")
 
  const employees = await res.json()
 

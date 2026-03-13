@@ -93,7 +93,7 @@ onkeyup="searchLeads()">
 
 async function checkNotifications(){
 
- const res = await fetch("http://localhost:3000/leads/today-followups")
+ const res = await fetch("https://real-estate-crm.onrender.com/leads/all")
  const data = await res.json()
 
  if(data.length > 0){
@@ -101,6 +101,7 @@ async function checkNotifications(){
  }
 
 }
+
 function searchLeads(){
 
  const input=document.getElementById("search").value.toLowerCase()
@@ -117,6 +118,8 @@ function searchLeads(){
 
 }
 
+</script>
+
 async function addLead(){
 
  const name=document.getElementById("name").value
@@ -125,7 +128,7 @@ async function addLead(){
  const property=document.getElementById("property").value
  const budget=document.getElementById("budget").value
 
- await fetch("http://localhost:3000/leads/add",{
+ await fetch("https://real-estate-crm.onrender.com/leads/add",{
 
  method:"POST",
  headers:{ "Content-Type":"application/json" },
@@ -149,7 +152,7 @@ async function addLead(){
 
 async function updateStatus(id,status){
 
- await fetch(`http://localhost:3000/leads/status/${id}`,{
+ await fetch(`https://real-estate-crm.onrender.com/leads/status/${id}`,{
 
  method:"PUT",
  headers:{ "Content-Type":"application/json" },
@@ -163,7 +166,7 @@ async function updateStatus(id,status){
 
 async function assignLead(id,employee){
 
- await fetch(`http://localhost:3000/leads/assign/${id}`,{
+ await fetch(`https://real-estate-crm.onrender.com/leads/assign/${id}`,{
 
  method:"PUT",
  headers:{ "Content-Type":"application/json" },
@@ -183,7 +186,7 @@ async function addFollowup(id){
  const date = prompt("Enter followup date YYYY-MM-DD")
  const notes = prompt("Notes")
 
- await fetch("http://localhost:3000/leads/followup",{
+ await fetch("hhttps://real-estate-crm.onrender.com/leads/followup",{
 
  method:"POST",
  headers:{ "Content-Type":"application/json" },
@@ -204,7 +207,7 @@ async function addFollowup(id){
 
 async function loadLeads(){
 
- const res = await fetch("http://localhost:3000/leads/all")
+ const res = await fetch("https://real-estate-crm.onrender.com/leads/all")
  const leads = await res.json()
 
  const table=document.getElementById("leadsTable")
@@ -271,7 +274,7 @@ Follow-up
 
 async function loadFollowups(){
 
- const res = await fetch("http://localhost:3000/leads/today-followups")
+ const res = await fetch("https://real-estate-crm.onrender.com/leads/today-followups")
  const data = await res.json()
 
  const list=document.getElementById("todayFollowups")
@@ -286,7 +289,7 @@ async function loadFollowups(){
 
 async function loadMissed(){
 
- const res = await fetch("http://localhost:3000/leads/missed-followups")
+ const res = await fetch("https://real-estate-crm.onrender.com/leads/missed-followups")
  const data = await res.json()
 
  const list=document.getElementById("missedFollowups")
@@ -301,7 +304,7 @@ async function loadMissed(){
 
 async function loadUpcoming(){
 
- const res = await fetch("http://localhost:3000/leads/upcoming-followups")
+ const res = await fetch("https://real-estate-crm.onrender.com/leads/upcoming-followups")
  const data = await res.json()
 
  const list=document.getElementById("upcomingFollowups")
