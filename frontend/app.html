@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>CRM App</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
 
 </head>
 
@@ -14,37 +17,73 @@
 
 <div class="w-64 bg-gray-900 text-white min-h-screen p-4">
 
-<h2 class="text-xl font-bold mb-6">Real Estate CRM</h2>
+<h2 class="text-xl font-bold mb-6">
+Real Estate CRM
+</h2>
 
 <ul class="space-y-3">
 
 <li>
-<button onclick="loadPage('dashboard.html')" class="w-full text-left">
+<button
+onclick="loadPage('dashboard.html')"
+class="w-full text-left hover:text-gray-300">
+
 Dashboard
+
 </button>
 </li>
 
+
 <li>
-<button onclick="loadPage('pipeline.html')" class="w-full text-left">
+<button
+onclick="loadPage('pipeline.html')"
+class="w-full text-left hover:text-gray-300">
+
 Pipeline
+
 </button>
 </li>
 
+
 <li>
-<button onclick="loadPage('employees.html')" class="w-full text-left">
+<button
+onclick="loadPage('employees.html')"
+class="w-full text-left hover:text-gray-300">
+
 Employees
+
 </button>
 </li>
 
+
 <li>
-<button onclick="loadPage('analytics.html')" class="w-full text-left">
+<button
+onclick="loadPage('analytics.html')"
+class="w-full text-left hover:text-gray-300">
+
 Analytics
+
 </button>
+</li>
+
+
+<li class="pt-4 border-t border-gray-700">
+
+<button
+onclick="logout()"
+class="w-full text-left text-red-400">
+
+Logout
+
+</button>
+
 </li>
 
 </ul>
 
 </div>
+
+
 
 <!-- MAIN CONTENT -->
 
@@ -53,18 +92,52 @@ Analytics
 <iframe
 id="contentFrame"
 src="dashboard.html"
-class="w-full h-screen border rounded">
+class="w-full h-screen border rounded bg-white">
+
 </iframe>
 
 </div>
 
+
+
 <script>
+
+
+// AUTH CHECK
+
+const token =
+localStorage.getItem("crm_token")
+
+if(!token){
+
+ window.location="login.html"
+
+}
+
+
+
+// LOAD PAGE
 
 function loadPage(page){
 
-document.getElementById("contentFrame").src = page
+ document
+ .getElementById("contentFrame")
+ .src = page
 
 }
+
+
+
+// LOGOUT
+
+function logout(){
+
+ localStorage.removeItem("crm_token")
+
+ window.location="login.html"
+
+}
+
 
 </script>
 

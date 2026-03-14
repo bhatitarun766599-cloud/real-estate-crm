@@ -1,78 +1,162 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Employees</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
+
 </head>
 
 <body class="bg-gray-100 p-6">
 
-<h1 class="text-2xl font-bold mb-4">Employee Management</h1>
+<h1 class="text-2xl font-bold mb-6">
+Employee Management
+</h1>
+
+
+<!-- ADD EMPLOYEE -->
 
 <div class="bg-white p-4 rounded shadow mb-6">
 
-<input id="name" placeholder="Name" class="border p-2 mr-2">
-<input id="email" placeholder="Email" class="border p-2 mr-2">
-<input id="password" placeholder="Password" class="border p-2 mr-2">
-
-<button onclick="addEmployee()" class="bg-blue-500 text-white px-4 py-2 rounded">
+<h2 class="text-lg font-bold mb-3">
 Add Employee
+</h2>
+
+<input
+id="name"
+placeholder="Name"
+class="border p-2 mr-2 mb-2"
+/>
+
+<input
+id="email"
+placeholder="Email"
+class="border p-2 mr-2 mb-2"
+/>
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+class="border p-2 mr-2 mb-2"
+/>
+
+<button
+onclick="addEmployee()"
+class="bg-blue-500 text-white px-4 py-2 rounded">
+
+Add Employee
+
 </button>
 
 </div>
 
+
+
+<!-- EMPLOYEE TABLE -->
+
 <div class="bg-white p-4 rounded shadow">
 
-<h2 class="text-xl mb-2">Employees</h2>
+<h2 class="text-xl mb-3">Employees</h2>
 
-<ul id="employeeList"></ul>
+<table class="w-full border">
+
+<thead>
+
+<tr class="bg-gray-200">
+
+<th class="p-2 border">Name</th>
+<th class="p-2 border">Email</th>
+
+</tr>
+
+</thead>
+
+<tbody id="employeeTable"></tbody>
+
+</table>
 
 </div>
 
+
+
 <script>
+
+
+// ADD EMPLOYEE
 
 async function addEmployee(){
 
- const name=document.getElementById("name").value
- const email=document.getElementById("email").value
- const password=document.getElementById("password").value
+ const name =
+ document.getElementById("name").value
 
- await fetch("https://real-estate-crm.onrender.com/employees/add",{
+ const email =
+ document.getElementById("email").value
 
- method:"POST",
- headers:{
- "Content-Type":"application/json"
- },
+ const password =
+ document.getElementById("password").value
 
- body:JSON.stringify({name,email,password})
 
- })
+ await apiRequest(
+  "/employees/add",
+  "POST",
+  {name,email,password}
+ )
+
+ document.getElementById("name").value=""
+ document.getElementById("email").value=""
+ document.getElementById("password").value=""
 
  loadEmployees()
 
 }
 
+
+
+// LOAD EMPLOYEES
+
 async function loadEmployees(){
 
- const res = await fetch("https://real-estate-crm.onrender.com/employees/all")
+ const employees =
+ await apiRequest("/employees/all")
 
- const employees = await res.json()
+ const table =
+ document.getElementById("employeeTable")
 
- const list=document.getElementById("employeeList")
-
- list.innerHTML=""
+ table.innerHTML=""
 
  employees.forEach(e=>{
 
- list.innerHTML+=`<li>${e.name} - ${e.email}</li>`
+ table.innerHTML += `
+
+<tr>
+
+<td class="border p-2">
+${e.name}
+</td>
+
+<td class="border p-2">
+${e.email}
+</td>
+
+</tr>
+
+`
 
  })
 
 }
 
+
+
 loadEmployees()
 
 </script>
+
 
 </body>
 </html>

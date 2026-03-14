@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>CRM Leads</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100 p-6">
+
+
+<h1 class="text-2xl font-bold mb-6">CRM Leads</h1>
+
+
+<!-- ADD LEAD FORM -->
+
+<div class="bg-white p-4 rounded shadow mb-6">
+
+<h2 class="font-bold mb-4">Add New Lead</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+<input id="name" placeholder="Name" class="border p-2 rounded">
+
+<input id="phone" placeholder="Phone" class="border p-2 rounded">
+
+<input id="email" placeholder="Email" class="border p-2 rounded">
+
+<input id="city" placeholder="City" class="border p-2 rounded">
+
+<input id="property" placeholder="Property Interest" class="border p-2 rounded">
+
+<input id="budget" placeholder="Budget" class="border p-2 rounded">
+
+<input id="source" placeholder="Lead Source" class="border p-2 rounded">
+
+<input id="notes" placeholder="Notes" class="border p-2 rounded">
+
+<button onclick="addLead()"
+class="bg-blue-500 text-white p-2 rounded">
+Add Lead
+</button>
+
+</div>
+
+</div>
+
+
+<!-- LEADS TABLE -->
+
+<div class="bg-white p-4 rounded shadow">
+
+<table class="w-full">
+
+<thead>
+
+<tr class="border-b">
+
+<th>Name</th>
+<th>Phone</th>
+<th>City</th>
+<th>Budget</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="leadTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<script>
+
+
+// AUTO API SWITCH
+const API_BASE =
+ location.hostname === "localhost"
+  ? "http://localhost:3000"
+  : "https://your-backend-url.com";
+
+
+
+// LOAD LEADS
+
+async function loadLeads(){
+
+ const res = await fetch(`${API_BASE}/leads/all`);
+
+ const data = await res.json();
+
+ const table = document.getElementById("leadTable");
+
+ table.innerHTML = "";
+
+ data.forEach(lead => {
+
+  table.innerHTML += `
+
+  <tr class="border-b">
+
+  <td>${lead.name}</td>
+
+  <td>${lead.phone}</td>
+
+  <td>${lead.city || ""}</td>
+
+  <td>${lead.budget || ""}</td>
+
+  <td>
+
+  <select onchange="updateStatus(${lead.id},this.value)"
+  class="border p-1">
+
+  <option ${lead.status==="New"?"selected":""}>New</option>
+
+  <option ${lead.status==="Interested"?"selected":""}>
+  Interested
+  </option>
+
+  <option ${lead.status==="Site Visit"?"selected":""}>
+  Site Visit
+  </option>
+
+  <option ${lead.status==="Deal Closed"?"selected":""}>
+  Deal Closed
+  </option>
+
+  <option ${lead.status==="Lost Lead"?"selected":""}>
+  Lost Lead
+  </option>
+
+  </select>
+
+  </td>
+
+  </tr>
+
+  `;
+
+ });
+
+}
+
+
+
+// ADD LEAD
+
+async function addLead(){
+
+ const lead = {
+
+  name:document.getElementById("name").value,
+
+  phone:document.getElementById("phone").value,
+
+  email:document.getElementById("email").value,
+
+  city:document.getElementById("city").value,
+
+  property_interest:
+   document.getElementById("property").value,
+
+  budget:document.getElementById("budget").value,
+
+  source:document.getElementById("source").value,
+
+  notes:document.getElementById("notes").value
+
+ };
+
+ await fetch(`${API_BASE}/leads/add`,{
+
+  method:"POST",
+
+  headers:{
+   "Content-Type":"application/json"
+  },
+
+  body:JSON.stringify(lead)
+
+ });
+
+ loadLeads();
+
+}
+
+
+
+// UPDATE STATUS
+
+async function updateStatus(id,status){
+
+ await fetch(`${API_BASE}/leads/status/${id}`,{
+
+  method:"PUT",
+
+  headers:{
+   "Content-Type":"application/json"
+  },
+
+  body:JSON.stringify({status})
+
+ });
+
+}
+
+
+
+// INITIAL LOAD
+
+loadLeads();
+
+
+</script>
+
+
+</body>
+</html>

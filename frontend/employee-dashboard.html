@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Employee Dashboard</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
+
 </head>
 
 <body class="bg-gray-100 p-6">
 
-<h1 class="text-2xl font-bold mb-4">My Leads</h1>
+<h1 class="text-2xl font-bold mb-6">
+My Leads
+</h1>
+
+
+<div class="bg-white p-4 rounded shadow">
 
 <table class="w-full border">
 
@@ -15,10 +26,11 @@
 
 <tr class="bg-gray-200">
 
-<th class="p-2">Name</th>
-<th class="p-2">Phone</th>
-<th class="p-2">City</th>
-<th class="p-2">Status</th>
+<th class="p-2 border">Name</th>
+<th class="p-2 border">Phone</th>
+<th class="p-2 border">City</th>
+<th class="p-2 border">Status</th>
+<th class="p-2 border">Follow-up</th>
 
 </tr>
 
@@ -28,32 +40,90 @@
 
 </table>
 
+</div>
+
+
+
 <script>
+
+
+// AUTH CHECK
+
+const employee =
+localStorage.getItem("employee_id")
+
+if(!employee){
+
+ window.location="employee-login.html"
+
+}
+
+
+
+// LOAD LEADS
 
 async function loadLeads(){
 
- const employee = localStorage.getItem("employee_id")
+ const leads =
+ await apiRequest(`/leads/employee/${employee}`)
 
- const res = await fetch(
- `https://real-estate-crm.onrender.com/leads/employee/${employee}`
- )
-
- const leads = await res.json()
-
- const table=document.getElementById("leadTable")
+ const table =
+ document.getElementById("leadTable")
 
  table.innerHTML=""
 
  leads.forEach(l=>{
 
- table.innerHTML+=`
+ table.innerHTML += `
 
 <tr>
 
 <td class="border p-2">${l.name}</td>
+
 <td class="border p-2">${l.phone}</td>
-<td class="border p-2">${l.city}</td>
-<td class="border p-2">${l.status}</td>
+
+<td class="border p-2">${l.city || ""}</td>
+
+<td class="border p-2">
+
+<select
+onchange="updateStatus(${l.id},this.value)">
+
+<option ${l.status==="New"?"selected":""}>
+New
+</option>
+
+<option ${l.status==="Interested"?"selected":""}>
+Interested
+</option>
+
+<option ${l.status==="Site Visit"?"selected":""}>
+Site Visit
+</option>
+
+<option ${l.status==="Deal Closed"?"selected":""}>
+Deal Closed
+</option>
+
+<option ${l.status==="Lost Lead"?"selected":""}>
+Lost Lead
+</option>
+
+</select>
+
+</td>
+
+<td class="border p-2">
+
+<button
+onclick="addFollowup(${l.id})"
+class="bg-green-500 text-white px-2 py-1 rounded">
+
+Follow-up
+
+</button>
+
+</td>
 
 </tr>
 
@@ -62,6 +132,48 @@ async function loadLeads(){
  })
 
 }
+
+
+
+// UPDATE STATUS
+
+async function updateStatus(id,status){
+
+ await apiRequest(
+ `/leads/status/${id}`,
+ "PUT",
+ {status}
+ )
+
+}
+
+
+
+// ADD FOLLOWUP
+
+async function addFollowup(id){
+
+ const date =
+ prompt("Follow-up date (YYYY-MM-DD)")
+
+ const notes =
+ prompt("Notes")
+
+ await apiRequest(
+ "/leads/followup",
+ "POST",
+ {
+  lead_id:id,
+  followup_date:date,
+  notes:notes
+ }
+ )
+
+ alert("Follow-up added")
+
+}
+
+
 
 loadLeads()
 

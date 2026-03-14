@@ -1,56 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>CRM Login</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 
-<body>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-<h2>CRM Login</h2>
 
-<input id="email" placeholder="Email">
-<br><br>
+<div class="bg-white p-8 rounded shadow w-full max-w-sm">
 
-<input id="password" type="password" placeholder="Password">
-<br><br>
+<h2 class="text-xl font-bold mb-6 text-center">CRM Login</h2>
 
-<button onclick="login()">Login</button>
+<input
+id="email"
+placeholder="Email"
+class="border w-full p-2 mb-3 rounded"
+/>
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+class="border w-full p-2 mb-4 rounded"
+/>
+
+<button
+onclick="login()"
+class="bg-blue-500 text-white w-full p-2 rounded"
+>
+Login
+</button>
+
+<p id="error" class="text-red-500 mt-3 text-sm"></p>
+
+</div>
+
+
 
 <script>
 
-function login(){
+// AUTO API SWITCH
+const API_BASE =
+ location.hostname === "localhost"
+  ? "http://localhost:3000"
+  : "https://real-estate-crm.onrender.com";
 
- const email = document.getElementById("email").value;
- const password = document.getElementById("password").value;
 
- fetch("https://real-estate-crm.onrender.com/auth/login",{
-  method:"POST",
-  headers:{
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   email:email,
-   password:password
-  })
- })
- .then(res => res.json())
- .then(data => {
 
-  console.log(data);
+async function login(){
 
-  alert("Response: " + JSON.stringify(data));
+ const email =
+  document.getElementById("email").value;
 
- })
- .catch(err => {
+ const password =
+  document.getElementById("password").value;
 
-  console.log(err);
-  alert("Error connecting to server");
+ try{
 
- });
+  const res = await fetch(`${API_BASE}/auth/login`,{
+
+   method:"POST",
+
+   headers:{
+    "Content-Type":"application/json"
+   },
+
+   body:JSON.stringify({
+    email,
+    password
+   })
+
+  });
+
+  const data = await res.json();
+
+  if(data.token){
+
+   // SAVE TOKEN
+   localStorage.setItem("crm_token",data.token);
+
+   // REDIRECT
+   window.location.href = "analytics.html";
+
+  }else{
+
+   document.getElementById("error").innerText =
+    data.error || "Login failed";
+
+  }
+
+ }catch(err){
+
+  console.error(err);
+
+  document.getElementById("error").innerText =
+   "Server connection error";
+
+ }
 
 }
 
 </script>
+
 
 </body>
 </html>

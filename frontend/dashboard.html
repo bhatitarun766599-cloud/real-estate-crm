@@ -1,36 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Real Estate CRM</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+
+<script src="api.js"></script>
+
 </head>
 
 <body class="bg-gray-100 p-4">
 
-<h1 class="text-2xl font-bold mb-4">Real Estate CRM Dashboard</h1>
+<h1 class="text-2xl font-bold mb-4">
+Real Estate CRM Dashboard
+</h1>
 
-<!-- FOLLOWUP WIDGETS -->
+
+<!-- FOLLOWUPS -->
 
 <div class="grid grid-cols-3 gap-4 mb-6">
 
 <div class="bg-yellow-100 p-3 rounded">
+
 <h2 class="font-bold">Today's Followups</h2>
 
 <ul id="todayFollowups"></ul>
+
 </div>
+
 
 <div class="bg-red-100 p-3 rounded">
+
 <h2 class="font-bold">Missed Followups</h2>
+
 <ul id="missedFollowups"></ul>
+
 </div>
+
 
 <div class="bg-green-100 p-3 rounded">
+
 <h2 class="font-bold">Upcoming Followups</h2>
+
 <ul id="upcomingFollowups"></ul>
+
 </div>
 
 </div>
+
 
 <!-- ADD LEAD -->
 
@@ -38,30 +58,45 @@
 
 <h2 class="text-xl mb-3">Add Lead</h2>
 
-<input id="name" placeholder="Name" class="border p-2 mr-2 mb-2">
-<input id="phone" placeholder="Phone" class="border p-2 mr-2 mb-2">
-<input id="city" placeholder="City" class="border p-2 mr-2 mb-2">
+<input id="name" placeholder="Name"
+class="border p-2 mr-2 mb-2">
+
+<input id="phone" placeholder="Phone"
+class="border p-2 mr-2 mb-2">
+
+<input id="city" placeholder="City"
+class="border p-2 mr-2 mb-2">
 
 <br>
 
-<input id="property" placeholder="Property Interest" class="border p-2 mr-2 mb-2">
-<input id="budget" placeholder="Budget" class="border p-2 mr-2 mb-2">
+<input id="property"
+placeholder="Property Interest"
+class="border p-2 mr-2 mb-2">
+
+<input id="budget"
+placeholder="Budget"
+class="border p-2 mr-2 mb-2">
 
 <br>
 
-<button onclick="addLead()" class="bg-blue-500 text-white px-4 py-2 rounded">
+<button onclick="addLead()"
+class="bg-blue-500 text-white px-4 py-2 rounded">
+
 Add Lead
+
 </button>
 
 </div>
+
+
 
 <!-- LEADS TABLE -->
 
 <div class="bg-white p-4 rounded shadow">
 
 <h2 class="text-xl mb-2">Leads</h2>
-<input
-id="search"
+
+<input id="search"
 placeholder="Search leads..."
 class="border p-2 mb-4 w-full"
 onkeyup="searchLeads()">
@@ -69,6 +104,7 @@ onkeyup="searchLeads()">
 <table class="w-full border">
 
 <thead>
+
 <tr class="bg-gray-200">
 
 <th class="p-2">Name</th>
@@ -78,9 +114,9 @@ onkeyup="searchLeads()">
 <th class="p-2">Budget</th>
 <th class="p-2">Status</th>
 <th class="p-2">Follow-up</th>
-<th class="p-2">Assign</th>
 
 </tr>
+
 </thead>
 
 <tbody id="leadsTable"></tbody>
@@ -89,113 +125,99 @@ onkeyup="searchLeads()">
 
 </div>
 
+
+
 <script>
 
-async function checkNotifications(){
-
- const res = await fetch("https://real-estate-crm.onrender.com/leads/all")
- const data = await res.json()
-
- if(data.length > 0){
- alert("⚠ You have " + data.length + " followups today")
- }
-
-}
 
 function searchLeads(){
 
- const input=document.getElementById("search").value.toLowerCase()
+ const input =
+ document.getElementById("search")
+ .value
+ .toLowerCase()
 
- const rows=document.querySelectorAll("#leadsTable tr")
+ const rows =
+ document.querySelectorAll("#leadsTable tr")
 
  rows.forEach(row=>{
 
- const text=row.innerText.toLowerCase()
+ const text =
+ row.innerText.toLowerCase()
 
- row.style.display=text.includes(input) ? "" : "none"
+ row.style.display =
+ text.includes(input) ? "" : "none"
 
  })
 
 }
 
-</script>
+
+
+// ADD LEAD
 
 async function addLead(){
 
- const name=document.getElementById("name").value
- const phone=document.getElementById("phone").value
- const city=document.getElementById("city").value
- const property=document.getElementById("property").value
- const budget=document.getElementById("budget").value
+ const lead = {
 
- await fetch("https://real-estate-crm.onrender.com/leads/add",{
+  name:
+  document.getElementById("name").value,
 
- method:"POST",
- headers:{ "Content-Type":"application/json" },
+  phone:
+  document.getElementById("phone").value,
 
- body:JSON.stringify({
- name:name,
- phone:phone,
- city:city,
- property_interest:property,
- budget:budget,
- notes:"",
- source:"Manual",
- assigned_to:null
- })
+  city:
+  document.getElementById("city").value,
 
- })
+  property_interest:
+  document.getElementById("property").value,
+
+  budget:
+  document.getElementById("budget").value,
+
+  notes:"",
+  source:"Manual",
+  assigned_to:null
+
+ };
+
+ await apiRequest("/leads/add","POST",lead)
 
  loadLeads()
 
 }
+
+
+
+// UPDATE STATUS
 
 async function updateStatus(id,status){
 
- await fetch(`https://real-estate-crm.onrender.com/leads/status/${id}`,{
-
- method:"PUT",
- headers:{ "Content-Type":"application/json" },
- body:JSON.stringify({status})
-
- })
-
- loadLeads()
+ await apiRequest(
+  `/leads/status/${id}`,
+  "PUT",
+  {status}
+ )
 
 }
 
-async function assignLead(id,employee){
 
- await fetch(`https://real-estate-crm.onrender.com/leads/assign/${id}`,{
 
- method:"PUT",
- headers:{ "Content-Type":"application/json" },
-
- body:JSON.stringify({
- employee_id:employee
- })
-
- })
-
- alert("Lead assigned")
-
-}
+// FOLLOWUP
 
 async function addFollowup(id){
 
- const date = prompt("Enter followup date YYYY-MM-DD")
- const notes = prompt("Notes")
+ const date =
+ prompt("Enter followup date YYYY-MM-DD")
 
- await fetch("hhttps://real-estate-crm.onrender.com/leads/followup",{
+ const notes =
+ prompt("Notes")
 
- method:"POST",
- headers:{ "Content-Type":"application/json" },
+ await apiRequest("/leads/followup","POST",{
 
- body:JSON.stringify({
- lead_id:id,
- followup_date:date,
- notes:notes
- })
+  lead_id:id,
+  followup_date:date,
+  notes:notes
 
  })
 
@@ -205,12 +227,18 @@ async function addFollowup(id){
 
 }
 
+
+
+// LOAD LEADS
+
 async function loadLeads(){
 
- const res = await fetch("https://real-estate-crm.onrender.com/leads/all")
- const leads = await res.json()
+ const leads =
+ await apiRequest("/leads/all")
 
- const table=document.getElementById("leadsTable")
+ const table =
+ document.getElementById("leadsTable")
+
  table.innerHTML=""
 
  leads.forEach(lead=>{
@@ -220,22 +248,41 @@ async function loadLeads(){
 <tr>
 
 <td class="border p-2">${lead.name}</td>
+
 <td class="border p-2">${lead.phone}</td>
-<td class="border p-2">${lead.city}</td>
-<td class="border p-2">${lead.property_interest}</td>
-<td class="border p-2">${lead.budget}</td>
+
+<td class="border p-2">${lead.city || ""}</td>
+
+<td class="border p-2">
+${lead.property_interest || ""}
+</td>
+
+<td class="border p-2">${lead.budget || ""}</td>
 
 <td class="border p-2">
 
-<select onchange="updateStatus(${lead.id},this.value)">
+<select
+onchange="updateStatus(${lead.id},this.value)">
 
-<option>New Lead</option>
-<option>Contacted</option>
-<option>Follow-up</option>
-<option>Interested</option>
-<option>Deal in Progress</option>
-<option>Deal Closed</option>
-<option>Lost Lead</option>
+<option ${lead.status==="New"?"selected":""}>
+New
+</option>
+
+<option ${lead.status==="Interested"?"selected":""}>
+Interested
+</option>
+
+<option ${lead.status==="Site Visit"?"selected":""}>
+Site Visit
+</option>
+
+<option ${lead.status==="Deal Closed"?"selected":""}>
+Deal Closed
+</option>
+
+<option ${lead.status==="Lost Lead"?"selected":""}>
+Lost Lead
+</option>
 
 </select>
 
@@ -243,24 +290,13 @@ async function loadLeads(){
 
 <td class="border p-2">
 
-<button onclick="addFollowup(${lead.id})"
+<button
+onclick="addFollowup(${lead.id})"
 class="bg-green-500 text-white px-2 py-1 rounded">
 
 Follow-up
 
 </button>
-
-</td>
-
-<td class="border p-2">
-
-<select onchange="assignLead(${lead.id},this.value)">
-
-<option value="">Assign</option>
-<option value="1">Employee 1</option>
-<option value="2">Employee 2</option>
-
-</select>
 
 </td>
 
@@ -272,58 +308,83 @@ Follow-up
 
 }
 
+
+
+// FOLLOWUP WIDGETS
+
 async function loadFollowups(){
 
- const res = await fetch("https://real-estate-crm.onrender.com/leads/today-followups")
- const data = await res.json()
+ const data =
+ await apiRequest("/leads/today-followups")
 
- const list=document.getElementById("todayFollowups")
+ const list =
+ document.getElementById("todayFollowups")
 
  list.innerHTML=""
 
  data.forEach(f=>{
- list.innerHTML += `<li>Lead ${f.lead_id} - ${f.notes}</li>`
+
+ list.innerHTML +=
+ `<li>${f.name} - ${f.notes}</li>`
+
  })
 
 }
+
+
 
 async function loadMissed(){
 
- const res = await fetch("https://real-estate-crm.onrender.com/leads/missed-followups")
- const data = await res.json()
+ const data =
+ await apiRequest("/leads/missed-followups")
 
- const list=document.getElementById("missedFollowups")
+ const list =
+ document.getElementById("missedFollowups")
 
  list.innerHTML=""
 
  data.forEach(f=>{
- list.innerHTML += `<li>Lead ${f.lead_id}</li>`
+
+ list.innerHTML +=
+ `<li>${f.name}</li>`
+
  })
 
 }
+
+
 
 async function loadUpcoming(){
 
- const res = await fetch("https://real-estate-crm.onrender.com/leads/upcoming-followups")
- const data = await res.json()
+ const data =
+ await apiRequest("/leads/upcoming-followups")
 
- const list=document.getElementById("upcomingFollowups")
+ const list =
+ document.getElementById("upcomingFollowups")
 
  list.innerHTML=""
 
  data.forEach(f=>{
- list.innerHTML += `<li>Lead ${f.lead_id}</li>`
+
+ list.innerHTML +=
+ `<li>${f.name}</li>`
+
  })
 
 }
 
+
+
 loadLeads()
+
 loadFollowups()
+
 loadMissed()
+
 loadUpcoming()
-checkNotifications()
 
 </script>
+
 
 </body>
 </html>
