@@ -1,7 +1,7 @@
 const API_BASE =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://real-estate-crm.onrender.com";
+    : "https://real-estate-crm-o1x3.onrender.com";
 
 function getToken(){
   return localStorage.getItem("crm_token");
@@ -20,17 +20,17 @@ async function apiRequest(path, method="GET", body=null){
     }
   };
 
-  const token=getToken();
+  const token = getToken();
 
   if(token){
-    options.headers["Authorization"]="Bearer "+token;
+    options.headers["Authorization"] = "Bearer " + token;
   }
 
   if(body){
-    options.body=JSON.stringify(body);
+    options.body = JSON.stringify(body);
   }
 
-  const res = await fetch(api(path),options);
+  const res = await fetch(api(path), options);
 
   return res.json();
 }
