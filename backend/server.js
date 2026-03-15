@@ -8,7 +8,14 @@ const employeeRoutes = require("./routes/employees");
 
 const app = express();
 
-app.use(cors());
+/* CORS FIX */
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET","POST","PUT","DELETE"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
+
 app.use(express.json());
 
 /* PostgreSQL Connection */
@@ -21,8 +28,12 @@ const pool = new Pool({
 });
 
 pool.connect()
-  .then(() => console.log("PostgreSQL Connected ✅"))
-  .catch(err => console.error("DB Connection Error ❌", err));
+  .then(() => {
+    console.log("PostgreSQL Connected ✅");
+  })
+  .catch((err) => {
+    console.error("DB Connection Error ❌", err);
+  });
 
 /* Routes */
 
@@ -30,14 +41,16 @@ app.use("/auth", authRoutes);
 app.use("/leads", leadRoutes);
 app.use("/employees", employeeRoutes);
 
+/* Health Check */
+
 app.get("/", (req, res) => {
   res.send("Real Estate CRM API Running 🚀");
 });
 
-/* Server */
+/* Server Start */
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("CRM Server running on port " + PORT);
+  console.log(`CRM Server running on port ${PORT}`);
 });
