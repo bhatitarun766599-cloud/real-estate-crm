@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const pool = require("../db");
 
 const router = express.Router();
@@ -21,7 +22,9 @@ router.post("/login", async (req, res) => {
 
     const dbUser = user.rows[0];
 
-    if (dbUser.password !== password) {
+    const validPassword = await bcrypt.compare(password, dbUser.password);
+
+    if (!validPassword) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
@@ -33,7 +36,7 @@ router.post("/login", async (req, res) => {
 
     res.json({
       message: "Login successful",
-      token: token,
+      token,
       user: {
         id: dbUser.id,
         name: dbUser.name,
@@ -41,12 +44,12 @@ router.post("/login", async (req, res) => {
       }
     });
 
-  catch (err) {
+  } catch (err) {
 
-  console.error(err.message);
-  res.status(500).json({ error: "Server Error" });
+    console.error(err);
+    res.status(500).json({ error: "Server Error" });
 
-}
+  }
 
 });
 
