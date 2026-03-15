@@ -7,13 +7,11 @@ const pool = new Pool({
   }
 });
 
-// Test Database Connection
-pool.connect((err, client, release) => {
+pool.connect((err) => {
   if (err) {
-    console.error("❌ Database connection error:", err.stack);
+    console.error("Database connection error:", err);
   } else {
-    console.log("✅ PostgreSQL Connected");
-    release();
+    console.log("PostgreSQL Connected");
   }
 });
 
