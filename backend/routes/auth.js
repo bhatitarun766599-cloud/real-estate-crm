@@ -1,12 +1,9 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const pool = require("../db");
 
 const router = express.Router();
 
-
-// LOGIN
 router.post("/login", async (req, res) => {
 
   try {
@@ -24,12 +21,7 @@ router.post("/login", async (req, res) => {
 
     const dbUser = user.rows[0];
 
-    const validPassword = await bcrypt.compare(
-      password,
-      dbUser.password
-    );
-
-    if (!validPassword) {
+    if (dbUser.password !== password) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
