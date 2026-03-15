@@ -52,11 +52,13 @@
 
 <script>
 
-// AUTO API SWITCH
+/* AUTO API SWITCH */
+
 const API_BASE =
  location.hostname === "localhost"
   ? "http://localhost:3000"
-  : "https://your-backend-url.com";
+  : "https://real-estate-crm-cxtj.onrender.com";
+
 
 async function loadAnalytics(){
 
@@ -85,16 +87,20 @@ async function loadAnalytics(){
 
  }catch(err){
 
-  console.error(err);
+  console.error("Analytics Error:",err);
 
  }
 
 }
 
-// LOAD DATA
+
+/* LOAD DATA */
+
 loadAnalytics();
 
-// AUTO REFRESH EVERY 30s
+
+/* AUTO REFRESH EVERY 30s */
+
 setInterval(loadAnalytics,30000);
 
 </script>
