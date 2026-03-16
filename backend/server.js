@@ -8,7 +8,7 @@ const employeeRoutes = require("./routes/employees");
 
 const app = express();
 
-/* CORS FIX */
+/* CORS */
 
 app.use(cors({
   origin: "*",
@@ -28,37 +28,27 @@ const pool = new Pool({
 });
 
 pool.connect()
-  .then(() => {
-    console.log("PostgreSQL Connected ✅");
-  })
-  .catch((err) => {
-    console.error("DB Connection Error ❌", err);
-  });
-
-/* Routes */
-
-app.use("/auth", authRoutes);
-app.use("/leads", leadRoutes);
-app.use("/employees", employeeRoutes);
-
-/* Health Check */
-
-app.get("/", (req, res) => {
-  res.send("Real Estate CRM API Running 🚀");
+.then(()=>{
+  console.log("PostgreSQL Connected ✅");
+})
+.catch(err=>{
+  console.error("DB Connection Error ❌",err);
 });
 
-/* Server Start */
 
-const PORT = process.env.PORT || 3000;
+/* ===============================
+   ROUND ROBIN EMPLOYEE FUNCTION
+================================ */
 
-app.listen(PORT, () => {
-  console.log(`CRM Server running on port ${PORT}`);
-});
-async function getNextEmployee() {
+async function getNextEmployee(){
 
  const employees = await pool.query(
   "SELECT id FROM employees WHERE status='active' ORDER BY id"
  )
+
+ if(employees.rows.length === 0){
+  throw new Error("No active employees found")
+ }
 
  const rotation = await pool.query(
   "SELECT last_employee_id FROM lead_rotation LIMIT 1"
@@ -77,5 +67,108 @@ async function getNextEmployee() {
  )
 
  return nextEmployee
-
 }
+
+
+/* ===============================
+   FACEBOOK WEBHOOK VERIFY
+================================ */
+
+app.get("/webhook/facebook",(req,res)=>{
+
+ const VERIFY_TOKEN = "crm_webhook_verify"
+
+ const mode = req.query["hub.mode"]
+ const token = req.query["hub.verify_token"]
+ const challenge = req.query["hub.challenge"]
+
+ if(mode && token === VERIFY_TOKEN){
+  console.log("Webhook verified")
+  res.status(200).send(challenge)
+ }else{
+  res.sendStatus(403)
+ }
+
+})
+
+
+/* ===============================
+   FACEBOOK LEAD RECEIVE
+================================ */
+
+app.post("/webhook/facebook", async (req,res)=>{
+
+ try{
+
+  const entry = req.body.entry
+
+  if(entry && entry.length > 0){
+
+   const changes = entry[0].changes
+   const leadData = changes[0].value
+
+   let name = ""
+   let phone = ""
+
+   if(leadData.field_data){
+
+    leadData.field_data.forEach(field=>{
+
+     if(field.name === "full_name"){
+      name = field.values[0]
+     }
+
+     if(field.name === "phone_number"){
+      phone = field.values[0]
+     }
+
+    })
+
+   }
+
+   const employee = await getNextEmployee()
+
+   await pool.query(
+    "INSERT INTO leads (name,phone,source,assigned_to) VALUES ($1,$2,$3,$4)",
+    [name,phone,"facebook_ads",employee]
+   )
+
+   console.log("New Facebook Lead Saved")
+
+  }
+
+  res.sendStatus(200)
+
+ }catch(err){
+
+  console.log("Webhook Error:",err)
+  res.sendStatus(500)
+
+ }
+
+})
+
+
+/* ===============================
+   ROUTES
+================================ */
+
+app.use("/auth", authRoutes);
+app.use("/leads", leadRoutes);
+app.use("/employees", employeeRoutes);
+
+
+/* HEALTH CHECK */
+
+app.get("/", (req,res)=>{
+ res.send("Real Estate CRM API Running 🚀")
+})
+
+
+/* SERVER START */
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT,()=>{
+ console.log(`CRM Server running on port ${PORT}`)
+})
