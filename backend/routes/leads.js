@@ -4,7 +4,38 @@ const pool = require("../db");
 const router = express.Router();
 
 
-// ADD LEAD
+/* ROUND ROBIN EMPLOYEE ASSIGNMENT */
+async function getNextEmployee() {
+
+  const employees = await pool.query(
+    "SELECT id FROM employees WHERE status='active' ORDER BY id"
+  );
+
+  if (employees.rows.length === 0) {
+    throw new Error("No active employees found");
+  }
+
+  const rotation = await pool.query(
+    "SELECT last_employee_id FROM lead_rotation LIMIT 1"
+  );
+
+  let last = rotation.rows[0].last_employee_id;
+
+  let index = employees.rows.findIndex(e => e.id === last);
+
+  let nextEmployee =
+    employees.rows[(index + 1) % employees.rows.length].id;
+
+  await pool.query(
+    "UPDATE lead_rotation SET last_employee_id=$1",
+    [nextEmployee]
+  );
+
+  return nextEmployee;
+}
+
+
+/* ADD LEAD (AUTO ASSIGN EMPLOYEE) */
 router.post("/add", async (req, res) => {
   try {
 
@@ -16,16 +47,17 @@ router.post("/add", async (req, res) => {
       property_interest,
       budget,
       notes,
-      source,
-      assigned_to
+      source
     } = req.body;
+
+    const employee = await getNextEmployee();
 
     const newLead = await pool.query(
       `INSERT INTO leads
       (name,phone,email,city,property_interest,budget,notes,source,assigned_to)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
       RETURNING *`,
-      [name,phone,email,city,property_interest,budget,notes,source,assigned_to]
+      [name,phone,email,city,property_interest,budget,notes,source,employee]
     );
 
     res.json(newLead.rows[0]);
@@ -39,7 +71,7 @@ router.post("/add", async (req, res) => {
 });
 
 
-// GET ALL LEADS
+/* GET ALL LEADS */
 router.get("/all", async (req, res) => {
   try {
 
@@ -61,7 +93,7 @@ router.get("/all", async (req, res) => {
 });
 
 
-// UPDATE LEAD STATUS
+/* UPDATE LEAD STATUS */
 router.put("/status/:id", async (req, res) => {
   try {
 
@@ -83,7 +115,7 @@ router.put("/status/:id", async (req, res) => {
 });
 
 
-// ASSIGN LEAD TO EMPLOYEE
+/* MANUAL ASSIGN LEAD */
 router.put("/assign/:id", async (req, res) => {
   try {
 
@@ -105,7 +137,7 @@ router.put("/assign/:id", async (req, res) => {
 });
 
 
-// LEADS BY EMPLOYEE
+/* LEADS BY EMPLOYEE */
 router.get("/employee/:id", async (req, res) => {
   try {
 
@@ -125,7 +157,7 @@ router.get("/employee/:id", async (req, res) => {
 });
 
 
-// ADD FOLLOWUP
+/* ADD FOLLOWUP */
 router.post("/followup", async (req, res) => {
   try {
 
@@ -148,7 +180,7 @@ router.post("/followup", async (req, res) => {
 });
 
 
-// TODAY FOLLOWUPS
+/* TODAY FOLLOWUPS */
 router.get("/today-followups", async (req, res) => {
   try {
 
@@ -170,7 +202,7 @@ router.get("/today-followups", async (req, res) => {
 });
 
 
-// MISSED FOLLOWUPS
+/* MISSED FOLLOWUPS */
 router.get("/missed-followups", async (req, res) => {
   try {
 
@@ -192,7 +224,7 @@ router.get("/missed-followups", async (req, res) => {
 });
 
 
-// UPCOMING FOLLOWUPS
+/* UPCOMING FOLLOWUPS */
 router.get("/upcoming-followups", async (req, res) => {
   try {
 
@@ -214,7 +246,7 @@ router.get("/upcoming-followups", async (req, res) => {
 });
 
 
-// ANALYTICS
+/* ANALYTICS */
 router.get("/analytics", async (req, res) => {
   try {
 
