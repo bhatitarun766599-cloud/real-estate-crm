@@ -74,19 +74,24 @@ async function getNextEmployee(){
 
 const VERIFY_TOKEN = "crm_webhook_verify";
 
-app.get("/webhook/facebook",(req,res)=>{
+app.get("/webhook/facebook", (req, res) => {
 
- const mode = req.query["hub.mode"];
- const token = req.query["hub.verify_token"];
- const challenge = req.query["hub.challenge"];
+  console.log("QUERY:", req.query);
 
- if(mode === "subscribe" && token === VERIFY_TOKEN){
-  console.log("Webhook Verified ✅");
-  return res.status(200).send(challenge);
- }else{
-  console.log("Webhook Verify Failed ❌");
-  return res.sendStatus(403);
- }
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  console.log("MODE:", mode);
+  console.log("TOKEN:", token);
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook Verified ✅");
+    return res.status(200).send(challenge);
+  } else {
+    console.log("Webhook Verify Failed ❌");
+    return res.sendStatus(403);
+  }
 
 });
 
