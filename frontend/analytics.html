@@ -10,50 +10,64 @@
 
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50">
 
-<h1 class="text-2xl font-bold mb-6">CRM Analytics Dashboard</h1>
-
-
-<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-
-<div class="bg-white p-4 rounded shadow">
-<p>Total Leads</p>
-<h2 id="total" class="text-2xl font-bold">Loading...</h2>
+<!-- NAVBAR -->
+<div class="bg-white border-b px-6 py-4 flex justify-between items-center">
+  <h1 class="text-xl font-semibold text-gray-800">📊 CRM Analytics</h1>
+  <button onclick="logout()" class="text-red-500 text-sm">Logout</button>
 </div>
 
-<div class="bg-white p-4 rounded shadow">
-<p>Today's Leads</p>
-<h2 id="today" class="text-2xl font-bold">Loading...</h2>
-</div>
+<!-- MAIN -->
+<div class="p-6">
 
-<div class="bg-white p-4 rounded shadow">
-<p>Interested Leads</p>
-<h2 id="interested" class="text-2xl font-bold">Loading...</h2>
-</div>
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+    <p class="text-gray-500 text-sm">Live performance insights</p>
+  </div>
 
-<div class="bg-white p-4 rounded shadow">
-<p>Deals Closed</p>
-<h2 id="closed" class="text-2xl font-bold">Loading...</h2>
-</div>
+  <!-- CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-<div class="bg-white p-4 rounded shadow">
-<p>Lost Leads</p>
-<h2 id="lost" class="text-2xl font-bold">Loading...</h2>
-</div>
+    <!-- CARD -->
+    <div class="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition">
+      <p class="text-gray-500 text-sm">Total Leads</p>
+      <h2 id="total" class="text-3xl font-bold mt-2 text-gray-800">--</h2>
+    </div>
 
-<div class="bg-white p-4 rounded shadow">
-<p>Conversion Rate</p>
-<h2 id="conversion" class="text-2xl font-bold">Loading...</h2>
-</div>
+    <div class="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition">
+      <p class="text-gray-500 text-sm">Today's Leads</p>
+      <h2 id="today" class="text-3xl font-bold mt-2 text-blue-600">--</h2>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition">
+      <p class="text-gray-500 text-sm">Interested</p>
+      <h2 id="interested" class="text-3xl font-bold mt-2 text-green-600">--</h2>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition">
+      <p class="text-gray-500 text-sm">Deals Closed</p>
+      <h2 id="closed" class="text-3xl font-bold mt-2 text-indigo-600">--</h2>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition">
+      <p class="text-gray-500 text-sm">Lost Leads</p>
+      <h2 id="lost" class="text-3xl font-bold mt-2 text-red-500">--</h2>
+    </div>
+
+    <div class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-2xl shadow p-5">
+      <p class="text-sm opacity-80">Conversion Rate</p>
+      <h2 id="conversion" class="text-3xl font-bold mt-2">--%</h2>
+    </div>
+
+  </div>
 
 </div>
-
 
 <script>
 
 /* AUTO API SWITCH */
-
 const API_BASE =
  location.hostname === "localhost"
   ? "http://localhost:3000"
@@ -65,46 +79,37 @@ async function loadAnalytics(){
  try{
 
   const res = await fetch(`${API_BASE}/leads/analytics`);
-
   const data = await res.json();
 
   document.getElementById("total").innerText = data.total;
-
   document.getElementById("today").innerText = data.today;
-
   document.getElementById("interested").innerText = data.interested;
-
   document.getElementById("closed").innerText = data.closed;
-
   document.getElementById("lost").innerText = data.lost;
 
   const conversion = data.total > 0
    ? (data.closed / data.total * 100).toFixed(1)
    : 0;
 
-  document.getElementById("conversion").innerText =
-   conversion + "%";
+  document.getElementById("conversion").innerText = conversion + "%";
 
  }catch(err){
-
   console.error("Analytics Error:",err);
-
  }
 
 }
 
-
-/* LOAD DATA */
-
+/* AUTO REFRESH */
+setInterval(loadAnalytics,30000);
 loadAnalytics();
 
-
-/* AUTO REFRESH EVERY 30s */
-
-setInterval(loadAnalytics,30000);
+/* LOGOUT */
+function logout(){
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
 
 </script>
-
 
 </body>
 </html>

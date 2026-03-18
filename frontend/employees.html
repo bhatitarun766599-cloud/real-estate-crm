@@ -11,152 +11,140 @@
 
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50">
 
-<h1 class="text-2xl font-bold mb-6">
-Employee Management
-</h1>
-
-
-<!-- ADD EMPLOYEE -->
-
-<div class="bg-white p-4 rounded shadow mb-6">
-
-<h2 class="text-lg font-bold mb-3">
-Add Employee
-</h2>
-
-<input
-id="name"
-placeholder="Name"
-class="border p-2 mr-2 mb-2"
-/>
-
-<input
-id="email"
-placeholder="Email"
-class="border p-2 mr-2 mb-2"
-/>
-
-<input
-id="password"
-type="password"
-placeholder="Password"
-class="border p-2 mr-2 mb-2"
-/>
-
-<button
-onclick="addEmployee()"
-class="bg-blue-500 text-white px-4 py-2 rounded">
-
-Add Employee
-
-</button>
-
+<!-- NAVBAR -->
+<div class="bg-white border-b px-6 py-4 flex justify-between items-center">
+  <h1 class="text-lg font-semibold text-gray-800">👥 Employees</h1>
 </div>
 
+<div class="p-6">
+
+  <!-- ADD EMPLOYEE -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
+
+    <h2 class="text-lg font-semibold mb-4">Add Employee</h2>
+
+    <div class="grid md:grid-cols-4 gap-3">
+
+      <input
+        id="name"
+        placeholder="Name"
+        class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+
+      <input
+        id="email"
+        placeholder="Email"
+        class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+
+      <button
+        onclick="addEmployee()"
+        class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 transition">
+        Add
+      </button>
+
+    </div>
+
+  </div>
 
 
-<!-- EMPLOYEE TABLE -->
+  <!-- EMPLOYEE TABLE -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm">
 
-<div class="bg-white p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-4">Employee List</h2>
 
-<h2 class="text-xl mb-3">Employees</h2>
+    <div class="overflow-x-auto">
 
-<table class="w-full border">
+      <table class="w-full text-sm">
 
-<thead>
+        <thead>
+          <tr class="border-b text-gray-500">
+            <th class="text-left p-3">Name</th>
+            <th class="text-left p-3">Email</th>
+          </tr>
+        </thead>
 
-<tr class="bg-gray-200">
+        <tbody id="employeeTable"></tbody>
 
-<th class="p-2 border">Name</th>
-<th class="p-2 border">Email</th>
+      </table>
 
-</tr>
+    </div>
 
-</thead>
-
-<tbody id="employeeTable"></tbody>
-
-</table>
+  </div>
 
 </div>
-
 
 
 <script>
 
-
-// ADD EMPLOYEE
+/* ===============================
+   ADD EMPLOYEE
+================================ */
 
 async function addEmployee(){
 
- const name =
- document.getElementById("name").value
+ const name = document.getElementById("name").value;
+ const email = document.getElementById("email").value;
+ const password = document.getElementById("password").value;
 
- const email =
- document.getElementById("email").value
+ if(!name || !email || !password){
+   alert("All fields required");
+   return;
+ }
 
- const password =
- document.getElementById("password").value
+ await apiRequest("/employees/add","POST",{name,email,password});
 
+ // clear fields
+ document.getElementById("name").value="";
+ document.getElementById("email").value="";
+ document.getElementById("password").value="";
 
- await apiRequest(
-  "/employees/add",
-  "POST",
-  {name,email,password}
- )
-
- document.getElementById("name").value=""
- document.getElementById("email").value=""
- document.getElementById("password").value=""
-
- loadEmployees()
-
+ loadEmployees();
 }
 
 
-
-// LOAD EMPLOYEES
+/* ===============================
+   LOAD EMPLOYEES
+================================ */
 
 async function loadEmployees(){
 
- const employees =
- await apiRequest("/employees/all")
+ const employees = await apiRequest("/employees/all");
 
- const table =
- document.getElementById("employeeTable")
-
- table.innerHTML=""
+ const table = document.getElementById("employeeTable");
+ table.innerHTML="";
 
  employees.forEach(e=>{
 
  table.innerHTML += `
 
-<tr>
+<tr class="border-b hover:bg-gray-50">
 
-<td class="border p-2">
-${e.name}
-</td>
-
-<td class="border p-2">
-${e.email}
-</td>
+<td class="p-3 font-medium">${e.name}</td>
+<td class="p-3 text-gray-600">${e.email}</td>
 
 </tr>
 
 `
 
- })
+ });
 
 }
 
 
-
-loadEmployees()
+/* INIT */
+loadEmployees();
 
 </script>
-
 
 </body>
 </html>

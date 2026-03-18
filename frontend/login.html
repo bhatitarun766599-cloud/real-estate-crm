@@ -7,106 +7,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
 
 </head>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="bg-gray-50 flex items-center justify-center h-screen">
 
+<div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm">
 
-<div class="bg-white p-8 rounded shadow w-full max-w-sm">
+  <h2 class="text-xl font-semibold mb-6 text-center text-gray-800">
+    CRM Login
+  </h2>
 
-<h2 class="text-xl font-bold mb-6 text-center">CRM Login</h2>
+  <input
+    id="email"
+    placeholder="Email"
+    class="border w-full p-3 mb-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+  />
 
-<input
-id="email"
-placeholder="Email"
-class="border w-full p-2 mb-3 rounded"
-/>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+    class="border w-full p-3 mb-4 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+  />
 
-<input
-id="password"
-type="password"
-placeholder="Password"
-class="border w-full p-2 mb-4 rounded"
-/>
+  <button
+    onclick="login()"
+    class="bg-blue-600 hover:bg-blue-700 text-white w-full p-3 rounded-lg transition">
+    Login
+  </button>
 
-<button
-onclick="login()"
-class="bg-blue-500 text-white w-full p-2 rounded"
->
-Login
-</button>
-
-<p id="error" class="text-red-500 mt-3 text-sm"></p>
+  <p id="error" class="text-red-500 mt-3 text-sm text-center"></p>
 
 </div>
 
 
-
 <script>
 
-// AUTO API SWITCH
-const API_BASE =
- location.hostname === "localhost"
-  ? "http://localhost:3000"
-  : "https://real-estate-crm-cxtj.onrender.com";
-
+/* ===============================
+   LOGIN FUNCTION
+================================ */
 
 async function login(){
 
- const email =
-  document.getElementById("email").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
- const password =
-  document.getElementById("password").value;
+  try{
 
- try{
+    const data = await apiRequest(
+      "/auth/login",
+      "POST",
+      { email, password }
+    );
 
-  const res = await fetch(`${API_BASE}/auth/login`,{
+    if(data && data.token){
 
-   method:"POST",
+      // ✅ UNIFIED TOKEN SYSTEM
+      localStorage.setItem("token", data.token);
 
-   headers:{
-    "Content-Type":"application/json"
-   },
+      // redirect to main app
+      window.location.href = "app.html";
 
-   body:JSON.stringify({
-    email,
-    password
-   })
+    }else{
 
-  });
+      document.getElementById("error").innerText =
+        data?.error || "Login failed";
 
-  const data = await res.json();
+    }
 
-  if(data.token){
+  }catch(err){
 
-   // SAVE TOKEN
-   localStorage.setItem("crm_token",data.token);
-
-   // REDIRECT
-   window.location.href = "analytics.html";
-
-  }else{
-
-   document.getElementById("error").innerText =
-    data.error || "Login failed";
+    document.getElementById("error").innerText =
+      "Server error";
 
   }
-
- }catch(err){
-
-  console.error(err);
-
-  document.getElementById("error").innerText =
-   "Server connection error";
-
- }
 
 }
 
 </script>
-
 
 </body>
 </html>

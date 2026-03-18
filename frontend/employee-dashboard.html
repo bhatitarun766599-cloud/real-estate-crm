@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<title>Employee Dashboard</title>
+<title>My Leads</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -11,113 +11,118 @@
 
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50">
 
-<h1 class="text-2xl font-bold mb-6">
-My Leads
-</h1>
+<!-- NAVBAR -->
+<div class="bg-white border-b px-6 py-4 flex justify-between items-center">
+  <h1 class="text-lg font-semibold text-gray-800">📋 My Leads</h1>
+  <button onclick="logout()" class="text-red-500 text-sm">Logout</button>
+</div>
 
+<div class="p-6">
 
-<div class="bg-white p-4 rounded shadow">
+  <!-- SEARCH -->
+  <div class="mb-4 flex justify-between">
+    <input id="search"
+      placeholder="Search leads..."
+      class="border p-2 rounded text-sm w-64"
+      onkeyup="searchLeads()">
+  </div>
 
-<table class="w-full border">
+  <!-- TABLE -->
+  <div class="bg-white rounded-2xl shadow-sm overflow-x-auto">
 
-<thead>
+    <table class="w-full text-sm">
 
-<tr class="bg-gray-200">
+      <thead>
+        <tr class="border-b text-gray-500">
+          <th class="p-3 text-left">Name</th>
+          <th class="p-3 text-left">Phone</th>
+          <th class="p-3 text-left">City</th>
+          <th class="p-3 text-left">Status</th>
+          <th class="p-3 text-left">Action</th>
+        </tr>
+      </thead>
 
-<th class="p-2 border">Name</th>
-<th class="p-2 border">Phone</th>
-<th class="p-2 border">City</th>
-<th class="p-2 border">Status</th>
-<th class="p-2 border">Follow-up</th>
+      <tbody id="leadTable"></tbody>
 
-</tr>
+    </table>
 
-</thead>
-
-<tbody id="leadTable"></tbody>
-
-</table>
+  </div>
 
 </div>
 
 
-
 <script>
 
+/* ===============================
+   AUTH CHECK
+================================ */
 
-// AUTH CHECK
+const token = localStorage.getItem("token");
 
-const employee =
-localStorage.getItem("employee_id")
-
-if(!employee){
-
- window.location="employee-login.html"
-
+if(!token){
+  window.location = "login.html";
 }
 
 
+/* ===============================
+   SEARCH
+================================ */
 
-// LOAD LEADS
+function searchLeads(){
+ const input = document.getElementById("search").value.toLowerCase()
+ const rows = document.querySelectorAll("#leadTable tr")
+
+ rows.forEach(row=>{
+  row.style.display =
+   row.innerText.toLowerCase().includes(input) ? "" : "none"
+ })
+}
+
+
+/* ===============================
+   LOAD LEADS (JWT BASED)
+================================ */
 
 async function loadLeads(){
 
- const leads =
- await apiRequest(`/leads/employee/${employee}`)
+ const leads = await apiRequest("/leads/my");
 
- const table =
- document.getElementById("leadTable")
-
- table.innerHTML=""
+ const table = document.getElementById("leadTable");
+ table.innerHTML = "";
 
  leads.forEach(l=>{
 
  table.innerHTML += `
 
-<tr>
+<tr class="border-b hover:bg-gray-50">
 
-<td class="border p-2">${l.name}</td>
+<td class="p-3 font-medium">${l.name}</td>
+<td class="p-3">${l.phone}</td>
+<td class="p-3">${l.city || ""}</td>
 
-<td class="border p-2">${l.phone}</td>
-
-<td class="border p-2">${l.city || ""}</td>
-
-<td class="border p-2">
+<td class="p-3">
 
 <select
-onchange="updateStatus(${l.id},this.value)">
+ class="border rounded p-1"
+ onchange="updateStatus(${l.id},this.value)">
 
-<option ${l.status==="New"?"selected":""}>
-New
-</option>
-
-<option ${l.status==="Interested"?"selected":""}>
-Interested
-</option>
-
-<option ${l.status==="Site Visit"?"selected":""}>
-Site Visit
-</option>
-
-<option ${l.status==="Deal Closed"?"selected":""}>
-Deal Closed
-</option>
-
-<option ${l.status==="Lost Lead"?"selected":""}>
-Lost Lead
-</option>
+<option ${l.status==="New"?"selected":""}>New</option>
+<option ${l.status==="Contacted"?"selected":""}>Contacted</option>
+<option ${l.status==="Interested"?"selected":""}>Interested</option>
+<option ${l.status==="Not Interested"?"selected":""}>Not Interested</option>
+<option ${l.status==="Closed"?"selected":""}>Closed</option>
 
 </select>
 
 </td>
 
-<td class="border p-2">
+<td class="p-3">
 
 <button
-onclick="addFollowup(${l.id})"
-class="bg-green-500 text-white px-2 py-1 rounded">
+ onclick="addFollowup(${l.id})"
+ class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
 
 Follow-up
 
@@ -128,54 +133,41 @@ Follow-up
 </tr>
 
 `
-
  })
 
 }
 
 
-
-// UPDATE STATUS
+/* ===============================
+   UPDATE STATUS
+================================ */
 
 async function updateStatus(id,status){
-
- await apiRequest(
- `/leads/status/${id}`,
- "PUT",
- {status}
- )
-
+ await apiRequest(`/leads/status/${id}`,"PUT",{status})
 }
 
 
-
-// ADD FOLLOWUP
+/* ===============================
+   FOLLOWUP
+================================ */
 
 async function addFollowup(id){
 
- const date =
- prompt("Follow-up date (YYYY-MM-DD)")
+ const date = prompt("Follow-up date YYYY-MM-DD")
+ const notes = prompt("Notes")
 
- const notes =
- prompt("Notes")
-
- await apiRequest(
- "/leads/followup",
- "POST",
- {
+ await apiRequest("/leads/followup","POST",{
   lead_id:id,
   followup_date:date,
   notes:notes
- }
- )
+ })
 
  alert("Follow-up added")
-
 }
 
 
-
-loadLeads()
+/* INIT */
+loadLeads();
 
 </script>
 

@@ -11,163 +11,180 @@
 
 </head>
 
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-50">
 
-<h1 class="text-2xl font-bold mb-6">
-Lead Pipeline
-</h1>
+<!-- HEADER -->
+<div class="bg-white border-b px-6 py-4">
+  <h1 class="text-lg font-semibold text-gray-800">
+    📊 Lead Pipeline
+  </h1>
+</div>
 
+<div class="p-6 overflow-x-auto">
 
-<div class="flex gap-4 overflow-x-auto">
+  <div class="flex gap-6 min-w-max">
 
+    <!-- COLUMN TEMPLATE -->
+    
+    <div class="column">
+      <h2 class="column-title">New</h2>
+      <div id="New" class="pipeline"></div>
+    </div>
 
-<!-- NEW -->
+    <div class="column">
+      <h2 class="column-title text-green-600">Interested</h2>
+      <div id="Interested" class="pipeline"></div>
+    </div>
 
-<div class="bg-white p-3 rounded shadow w-64">
+    <div class="column">
+      <h2 class="column-title text-blue-600">Site Visit</h2>
+      <div id="Site Visit" class="pipeline"></div>
+    </div>
 
-<h2 class="font-bold mb-2">New</h2>
+    <div class="column">
+      <h2 class="column-title text-indigo-600">Deal Closed</h2>
+      <div id="Deal Closed" class="pipeline"></div>
+    </div>
 
-<div id="New" class="pipeline space-y-2"></div>
+    <div class="column">
+      <h2 class="column-title text-red-500">Lost Lead</h2>
+      <div id="Lost Lead" class="pipeline"></div>
+    </div>
+
+  </div>
 
 </div>
 
 
+<style>
 
-<!-- INTERESTED -->
+/* COLUMN STYLE */
+.column{
+  background:#ffffff;
+  padding:12px;
+  border-radius:16px;
+  width:260px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
 
-<div class="bg-white p-3 rounded shadow w-64">
+.column-title{
+  font-weight:600;
+  margin-bottom:10px;
+}
 
-<h2 class="font-bold mb-2">Interested</h2>
+/* CARD STYLE */
+.card{
+  background:#f9fafb;
+  padding:10px;
+  border-radius:10px;
+  cursor:grab;
+  transition:0.2s;
+  border:1px solid #e5e7eb;
+}
 
-<div id="Interested" class="pipeline space-y-2"></div>
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
 
-</div>
+/* PIPELINE */
+.pipeline{
+  min-height:50px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-
-
-<!-- SITE VISIT -->
-
-<div class="bg-white p-3 rounded shadow w-64">
-
-<h2 class="font-bold mb-2">Site Visit</h2>
-
-<div id="Site Visit" class="pipeline space-y-2"></div>
-
-</div>
-
-
-
-<!-- CLOSED -->
-
-<div class="bg-white p-3 rounded shadow w-64">
-
-<h2 class="font-bold mb-2">Deal Closed</h2>
-
-<div id="Deal Closed" class="pipeline space-y-2"></div>
-
-</div>
-
-
-
-<!-- LOST -->
-
-<div class="bg-white p-3 rounded shadow w-64">
-
-<h2 class="font-bold mb-2">Lost Lead</h2>
-
-<div id="Lost Lead" class="pipeline space-y-2"></div>
-
-</div>
-
-
-</div>
-
+</style>
 
 
 <script>
 
-let draggedLead = null
+let draggedLead = null;
 
 
+/* ===============================
+   AUTH CHECK
+================================ */
 
-// LOAD PIPELINE
+const token = localStorage.getItem("token");
+
+if(!token){
+  window.location = "login.html";
+}
+
+
+/* ===============================
+   LOAD PIPELINE
+================================ */
 
 async function loadPipeline(){
 
- const leads =
- await apiRequest("/leads/all")
+ const leads = await apiRequest("/leads/all");
 
  document.querySelectorAll(".pipeline")
- .forEach(col=>{
-  col.innerHTML=""
- })
+ .forEach(col=> col.innerHTML="");
 
  leads.forEach(lead=>{
 
- const card =
- document.createElement("div")
+  const card = document.createElement("div");
 
- card.className =
- "bg-blue-100 p-2 rounded shadow cursor-move"
+  card.className = "card";
+  card.draggable = true;
 
- card.draggable=true
+  card.innerHTML = `
+    <div class="font-semibold text-gray-800">${lead.name}</div>
+    <div class="text-sm text-gray-500">${lead.phone}</div>
+    <div class="text-xs text-gray-400">${lead.city || ""}</div>
+  `;
 
- card.innerHTML=`
+  card.addEventListener("dragstart",()=>{
+    draggedLead = lead.id;
+  });
 
-<strong>${lead.name}</strong><br>
-${lead.phone}<br>
-${lead.city || ""}
+  const column = document.getElementById(lead.status);
 
-`
+  if(column){
+    column.appendChild(card);
+  }
 
- card.addEventListener("dragstart",()=>{
- draggedLead = lead.id
- })
-
- const column =
- document.getElementById(lead.status)
-
- if(column){
-  column.appendChild(card)
- }
-
- })
+ });
 
 }
 
 
-
-// DRAG EVENTS
+/* ===============================
+   DRAG & DROP
+================================ */
 
 document.querySelectorAll(".pipeline")
 .forEach(col=>{
 
  col.addEventListener("dragover",(e)=>{
-  e.preventDefault()
- })
+  e.preventDefault();
+ });
 
  col.addEventListener("drop",async function(){
 
- const status = this.id
+  const status = this.id;
 
- await apiRequest(
- `/leads/status/${draggedLead}`,
- "PUT",
- {status}
- )
+  await apiRequest(
+    `/leads/status/${draggedLead}`,
+    "PUT",
+    {status}
+  );
 
- loadPipeline()
+  loadPipeline();
 
- })
+ });
 
-})
+});
 
 
-
-loadPipeline()
+/* INIT */
+loadPipeline();
 
 </script>
-
 
 </body>
 </html>

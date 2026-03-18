@@ -2,389 +2,248 @@
 <html>
 <head>
 
-<title>Real Estate CRM</title>
+<title>CRM Dashboard</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="api.js"></script>
 
 </head>
 
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-50">
 
-<h1 class="text-2xl font-bold mb-4">
-Real Estate CRM Dashboard
-</h1>
-
-
-<!-- FOLLOWUPS -->
-
-<div class="grid grid-cols-3 gap-4 mb-6">
-
-<div class="bg-yellow-100 p-3 rounded">
-
-<h2 class="font-bold">Today's Followups</h2>
-
-<ul id="todayFollowups"></ul>
-
+<!-- NAVBAR -->
+<div class="bg-white border-b px-6 py-4 flex justify-between items-center">
+  <h1 class="text-xl font-semibold text-gray-800">🏠 CRM Dashboard</h1>
+  <button onclick="logout()" class="text-red-500 text-sm">Logout</button>
 </div>
 
+<div class="p-6">
 
-<div class="bg-red-100 p-3 rounded">
+  <!-- FOLLOWUPS -->
+  <div class="grid md:grid-cols-3 gap-6 mb-6">
 
-<h2 class="font-bold">Missed Followups</h2>
+    <div class="bg-white p-5 rounded-2xl shadow-sm">
+      <h2 class="font-semibold mb-3 text-gray-700">Today</h2>
+      <ul id="todayFollowups" class="text-sm space-y-1"></ul>
+    </div>
 
-<ul id="missedFollowups"></ul>
+    <div class="bg-white p-5 rounded-2xl shadow-sm">
+      <h2 class="font-semibold mb-3 text-red-500">Missed</h2>
+      <ul id="missedFollowups" class="text-sm space-y-1"></ul>
+    </div>
 
-</div>
+    <div class="bg-white p-5 rounded-2xl shadow-sm">
+      <h2 class="font-semibold mb-3 text-green-600">Upcoming</h2>
+      <ul id="upcomingFollowups" class="text-sm space-y-1"></ul>
+    </div>
 
+  </div>
 
-<div class="bg-green-100 p-3 rounded">
+  <!-- ADD LEAD -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
 
-<h2 class="font-bold">Upcoming Followups</h2>
+    <h2 class="text-lg font-semibold mb-4">Add New Lead</h2>
 
-<ul id="upcomingFollowups"></ul>
+    <div class="grid md:grid-cols-3 gap-3">
 
-</div>
+      <input id="name" placeholder="Name"
+        class="border p-2 rounded">
 
-</div>
+      <input id="phone" placeholder="Phone"
+        class="border p-2 rounded">
 
+      <input id="city" placeholder="City"
+        class="border p-2 rounded">
 
-<!-- ADD LEAD -->
+      <input id="property"
+        placeholder="Property Interest"
+        class="border p-2 rounded">
 
-<div class="bg-white p-4 rounded shadow mb-6">
+      <input id="budget"
+        placeholder="Budget"
+        class="border p-2 rounded">
 
-<h2 class="text-xl mb-3">Add Lead</h2>
+    </div>
 
-<input id="name" placeholder="Name"
-class="border p-2 mr-2 mb-2">
+    <button onclick="addLead()"
+      class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition">
+      Add Lead
+    </button>
 
-<input id="phone" placeholder="Phone"
-class="border p-2 mr-2 mb-2">
+  </div>
 
-<input id="city" placeholder="City"
-class="border p-2 mr-2 mb-2">
+  <!-- LEADS -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm">
 
-<br>
+    <div class="flex justify-between mb-4">
+      <h2 class="text-lg font-semibold">Leads</h2>
+      <input id="search"
+        placeholder="Search..."
+        class="border p-2 rounded text-sm"
+        onkeyup="searchLeads()">
+    </div>
 
-<input id="property"
-placeholder="Property Interest"
-class="border p-2 mr-2 mb-2">
+    <div class="overflow-x-auto">
 
-<input id="budget"
-placeholder="Budget"
-class="border p-2 mr-2 mb-2">
+      <table class="w-full text-sm">
 
-<br>
+        <thead>
+          <tr class="text-gray-500 border-b">
+            <th class="text-left p-2">Name</th>
+            <th class="text-left p-2">Phone</th>
+            <th class="text-left p-2">City</th>
+            <th class="text-left p-2">Property</th>
+            <th class="text-left p-2">Budget</th>
+            <th class="text-left p-2">Status</th>
+            <th class="text-left p-2">Action</th>
+          </tr>
+        </thead>
 
-<button onclick="addLead()"
-class="bg-blue-500 text-white px-4 py-2 rounded">
+        <tbody id="leadsTable"></tbody>
 
-Add Lead
+      </table>
 
-</button>
+    </div>
 
-</div>
-
-
-
-<!-- LEADS TABLE -->
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="text-xl mb-2">Leads</h2>
-
-<input id="search"
-placeholder="Search leads..."
-class="border p-2 mb-4 w-full"
-onkeyup="searchLeads()">
-
-<table class="w-full border">
-
-<thead>
-
-<tr class="bg-gray-200">
-
-<th class="p-2">Name</th>
-<th class="p-2">Phone</th>
-<th class="p-2">City</th>
-<th class="p-2">Property</th>
-<th class="p-2">Budget</th>
-<th class="p-2">Status</th>
-<th class="p-2">Follow-up</th>
-
-</tr>
-
-</thead>
-
-<tbody id="leadsTable"></tbody>
-
-</table>
+  </div>
 
 </div>
-
-
 
 <script>
 
-
+/* SEARCH */
 function searchLeads(){
-
- const input =
- document.getElementById("search")
- .value
- .toLowerCase()
-
- const rows =
- document.querySelectorAll("#leadsTable tr")
+ const input = document.getElementById("search").value.toLowerCase()
+ const rows = document.querySelectorAll("#leadsTable tr")
 
  rows.forEach(row=>{
-
- const text =
- row.innerText.toLowerCase()
-
- row.style.display =
- text.includes(input) ? "" : "none"
-
+  row.style.display =
+   row.innerText.toLowerCase().includes(input) ? "" : "none"
  })
-
 }
 
-
-
-// ADD LEAD
-
+/* ADD LEAD */
 async function addLead(){
 
  const lead = {
-
-  name:
-  document.getElementById("name").value,
-
-  phone:
-  document.getElementById("phone").value,
-
-  city:
-  document.getElementById("city").value,
-
-  property_interest:
-  document.getElementById("property").value,
-
-  budget:
-  document.getElementById("budget").value,
-
+  name: document.getElementById("name").value,
+  phone: document.getElementById("phone").value,
+  city: document.getElementById("city").value,
+  property_interest: document.getElementById("property").value,
+  budget: document.getElementById("budget").value,
   notes:"",
-  source:"Manual",
-  assigned_to:null
-
+  source:"Manual"
  };
 
  await apiRequest("/leads/add","POST",lead)
 
  loadLeads()
-
 }
 
-
-
-// UPDATE STATUS
-
+/* STATUS */
 async function updateStatus(id,status){
-
- await apiRequest(
-  `/leads/status/${id}`,
-  "PUT",
-  {status}
- )
-
+ await apiRequest(`/leads/status/${id}`,"PUT",{status})
 }
 
-
-
-// FOLLOWUP
-
+/* FOLLOWUP */
 async function addFollowup(id){
 
- const date =
- prompt("Enter followup date YYYY-MM-DD")
-
- const notes =
- prompt("Notes")
+ const date = prompt("Followup date YYYY-MM-DD")
+ const notes = prompt("Notes")
 
  await apiRequest("/leads/followup","POST",{
-
   lead_id:id,
   followup_date:date,
   notes:notes
-
  })
 
- alert("Followup added")
-
  loadFollowups()
-
 }
 
-
-
-// LOAD LEADS
-
+/* LOAD LEADS */
 async function loadLeads(){
 
- const leads =
- await apiRequest("/leads/all")
-
- const table =
- document.getElementById("leadsTable")
+ const leads = await apiRequest("/leads/all")
+ const table = document.getElementById("leadsTable")
 
  table.innerHTML=""
 
  leads.forEach(lead=>{
 
  table.innerHTML += `
+<tr class="border-b hover:bg-gray-50">
 
-<tr>
+<td class="p-2 font-medium">${lead.name}</td>
+<td class="p-2">${lead.phone}</td>
+<td class="p-2">${lead.city || ""}</td>
+<td class="p-2">${lead.property_interest || ""}</td>
+<td class="p-2">${lead.budget || ""}</td>
 
-<td class="border p-2">${lead.name}</td>
-
-<td class="border p-2">${lead.phone}</td>
-
-<td class="border p-2">${lead.city || ""}</td>
-
-<td class="border p-2">
-${lead.property_interest || ""}
-</td>
-
-<td class="border p-2">${lead.budget || ""}</td>
-
-<td class="border p-2">
-
+<td class="p-2">
 <select
-onchange="updateStatus(${lead.id},this.value)">
+ class="border rounded p-1"
+ onchange="updateStatus(${lead.id},this.value)">
 
-<option ${lead.status==="New"?"selected":""}>
-New
-</option>
-
-<option ${lead.status==="Interested"?"selected":""}>
-Interested
-</option>
-
-<option ${lead.status==="Site Visit"?"selected":""}>
-Site Visit
-</option>
-
-<option ${lead.status==="Deal Closed"?"selected":""}>
-Deal Closed
-</option>
-
-<option ${lead.status==="Lost Lead"?"selected":""}>
-Lost Lead
-</option>
+<option ${lead.status==="New"?"selected":""}>New</option>
+<option ${lead.status==="Interested"?"selected":""}>Interested</option>
+<option ${lead.status==="Site Visit"?"selected":""}>Site Visit</option>
+<option ${lead.status==="Deal Closed"?"selected":""}>Deal Closed</option>
+<option ${lead.status==="Lost Lead"?"selected":""}>Lost Lead</option>
 
 </select>
-
 </td>
 
-<td class="border p-2">
-
+<td class="p-2">
 <button
-onclick="addFollowup(${lead.id})"
-class="bg-green-500 text-white px-2 py-1 rounded">
-
-Follow-up
-
+ onclick="addFollowup(${lead.id})"
+ class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+ Follow-up
 </button>
-
 </td>
 
 </tr>
-
 `
-
  })
 
 }
 
-
-
-// FOLLOWUP WIDGETS
-
+/* FOLLOWUPS */
 async function loadFollowups(){
-
- const data =
- await apiRequest("/leads/today-followups")
-
- const list =
- document.getElementById("todayFollowups")
-
+ const data = await apiRequest("/leads/today-followups")
+ const list = document.getElementById("todayFollowups")
  list.innerHTML=""
-
  data.forEach(f=>{
-
- list.innerHTML +=
- `<li>${f.name} - ${f.notes}</li>`
-
+  list.innerHTML += `<li>${f.name}</li>`
  })
-
 }
-
-
 
 async function loadMissed(){
-
- const data =
- await apiRequest("/leads/missed-followups")
-
- const list =
- document.getElementById("missedFollowups")
-
+ const data = await apiRequest("/leads/missed-followups")
+ const list = document.getElementById("missedFollowups")
  list.innerHTML=""
-
  data.forEach(f=>{
-
- list.innerHTML +=
- `<li>${f.name}</li>`
-
+  list.innerHTML += `<li>${f.name}</li>`
  })
-
 }
-
-
 
 async function loadUpcoming(){
-
- const data =
- await apiRequest("/leads/upcoming-followups")
-
- const list =
- document.getElementById("upcomingFollowups")
-
+ const data = await apiRequest("/leads/upcoming-followups")
+ const list = document.getElementById("upcomingFollowups")
  list.innerHTML=""
-
  data.forEach(f=>{
-
- list.innerHTML +=
- `<li>${f.name}</li>`
-
+  list.innerHTML += `<li>${f.name}</li>`
  })
-
 }
 
-
-
+/* INIT */
 loadLeads()
-
 loadFollowups()
-
 loadMissed()
-
 loadUpcoming()
 
 </script>
-
 
 </body>
 </html>

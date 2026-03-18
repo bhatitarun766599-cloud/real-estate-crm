@@ -11,133 +11,139 @@
 
 </head>
 
-<body class="bg-gray-100 flex">
+<body class="bg-gray-50 flex">
 
 <!-- SIDEBAR -->
+<div class="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
 
-<div class="w-64 bg-gray-900 text-white min-h-screen p-4">
+  <!-- LOGO -->
+  <div class="p-5 border-b border-gray-700">
+    <h2 class="text-xl font-semibold">🏠 CRM</h2>
+  </div>
 
-<h2 class="text-xl font-bold mb-6">
-Real Estate CRM
-</h2>
+  <!-- MENU -->
+  <div class="flex-1 p-4 space-y-2">
 
-<ul class="space-y-3">
+    <button onclick="loadPage('dashboard.html')"
+      class="menu-btn">Dashboard</button>
 
-<li>
-<button
-onclick="loadPage('dashboard.html')"
-class="w-full text-left hover:text-gray-300">
+    <button onclick="loadPage('pipeline.html')"
+      class="menu-btn">Pipeline</button>
 
-Dashboard
+    <button onclick="loadPage('employees.html')"
+      class="menu-btn">Employees</button>
 
-</button>
-</li>
+    <button onclick="loadPage('analytics.html')"
+      class="menu-btn">Analytics</button>
 
+  </div>
 
-<li>
-<button
-onclick="loadPage('pipeline.html')"
-class="w-full text-left hover:text-gray-300">
-
-Pipeline
-
-</button>
-</li>
-
-
-<li>
-<button
-onclick="loadPage('employees.html')"
-class="w-full text-left hover:text-gray-300">
-
-Employees
-
-</button>
-</li>
-
-
-<li>
-<button
-onclick="loadPage('analytics.html')"
-class="w-full text-left hover:text-gray-300">
-
-Analytics
-
-</button>
-</li>
-
-
-<li class="pt-4 border-t border-gray-700">
-
-<button
-onclick="logout()"
-class="w-full text-left text-red-400">
-
-Logout
-
-</button>
-
-</li>
-
-</ul>
+  <!-- LOGOUT -->
+  <div class="p-4 border-t border-gray-700">
+    <button onclick="logout()"
+      class="w-full text-left text-red-400 hover:text-red-300">
+      Logout
+    </button>
+  </div>
 
 </div>
 
 
+<!-- MAIN -->
+<div class="flex-1 flex flex-col">
 
-<!-- MAIN CONTENT -->
+  <!-- TOPBAR -->
+  <div class="bg-white border-b px-6 py-3 flex justify-between items-center">
 
-<div class="flex-1 p-6">
+    <h1 id="pageTitle" class="font-semibold text-gray-700">
+      Dashboard
+    </h1>
 
-<iframe
-id="contentFrame"
-src="dashboard.html"
-class="w-full h-screen border rounded bg-white">
+    <div class="text-sm text-gray-500">
+      Employee Panel
+    </div>
 
-</iframe>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="flex-1 p-6">
+
+    <iframe
+      id="contentFrame"
+      src="dashboard.html"
+      class="w-full h-full rounded-xl border bg-white shadow-sm">
+    </iframe>
+
+  </div>
 
 </div>
 
+
+<style>
+
+/* PREMIUM MENU STYLE */
+.menu-btn{
+  width:100%;
+  text-align:left;
+  padding:10px;
+  border-radius:8px;
+  transition:0.2s;
+}
+
+.menu-btn:hover{
+  background:#374151;
+}
+
+.menu-btn.active{
+  background:#2563eb;
+}
+
+</style>
 
 
 <script>
 
+/* ===============================
+   AUTH CHECK
+================================ */
 
-// AUTH CHECK
-
-const token =
-localStorage.getItem("crm_token")
+const token = localStorage.getItem("token");
 
 if(!token){
-
- window.location="login.html"
-
+  window.location = "login.html";
 }
 
 
-
-// LOAD PAGE
+/* ===============================
+   PAGE LOAD
+================================ */
 
 function loadPage(page){
 
- document
- .getElementById("contentFrame")
- .src = page
+  document.getElementById("contentFrame").src = page;
 
+  // update title
+  const name = page.replace(".html","");
+  document.getElementById("pageTitle").innerText =
+    name.charAt(0).toUpperCase() + name.slice(1);
+
+  // active menu highlight
+  document.querySelectorAll(".menu-btn").forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  event.target.classList.add("active");
 }
 
 
-
-// LOGOUT
+/* ===============================
+   LOGOUT
+================================ */
 
 function logout(){
-
- localStorage.removeItem("crm_token")
-
- window.location="login.html"
-
+  localStorage.removeItem("token");
+  window.location = "login.html";
 }
-
 
 </script>
 

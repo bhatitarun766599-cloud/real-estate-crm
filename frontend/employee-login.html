@@ -11,87 +11,68 @@
 
 </head>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="bg-gray-50 flex items-center justify-center h-screen">
 
-<div class="bg-white p-6 rounded shadow w-80">
+<div class="bg-white p-8 rounded-2xl shadow-md w-80">
 
-<h2 class="text-xl font-bold mb-4 text-center">
-Employee Login
-</h2>
+  <h2 class="text-xl font-semibold mb-6 text-center text-gray-800">
+    Welcome Back 👋
+  </h2>
 
-<input
-id="email"
-placeholder="Email"
-class="border p-2 w-full mb-2 rounded"
-/>
+  <input
+    id="email"
+    placeholder="Email"
+    class="border p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
 
-<input
-id="password"
-type="password"
-placeholder="Password"
-class="border p-2 w-full mb-3 rounded"
-/>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+    class="border p-3 w-full mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
 
-<button
-onclick="login()"
-class="bg-blue-500 text-white w-full p-2 rounded">
+  <button
+    onclick="login()"
+    class="bg-blue-600 hover:bg-blue-700 text-white w-full p-3 rounded-lg transition">
+    Login
+  </button>
 
-Login
-
-</button>
-
-<p id="error" class="text-red-500 text-sm mt-2"></p>
+  <p id="error" class="text-red-500 text-sm mt-3 text-center"></p>
 
 </div>
-
 
 
 <script>
 
 async function login(){
 
- const email =
- document.getElementById("email").value
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
- const password =
- document.getElementById("password").value
+  try{
 
- try{
+    const data = await apiRequest(
+      "/employees/login",
+      "POST",
+      { email, password }
+    );
 
- const data = await apiRequest(
- "/employees/login",
- "POST",
- {email,password}
- )
+    if(data && data.token){
 
- if(data.token){
+      // ✅ UNIFIED TOKEN SYSTEM
+      localStorage.setItem("token", data.token);
 
-  localStorage.setItem(
-   "employee_token",
-   data.token
-  )
+      // redirect
+      window.location = "employee-dashboard.html";
 
-  localStorage.setItem(
-   "employee_id",
-   data.employee.id
-  )
+    }else{
+      document.getElementById("error").innerText = "Invalid login";
+    }
 
-  window.location =
-  "employee-dashboard.html"
-
- }else{
-
-  document.getElementById("error")
-  .innerText = "Login failed"
-
- }
-
- }catch(err){
-
-  document.getElementById("error")
-  .innerText = "Server error"
-
- }
+  }catch(err){
+    document.getElementById("error").innerText = "Server error";
+  }
 
 }
 

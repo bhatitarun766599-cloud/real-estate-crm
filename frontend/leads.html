@@ -7,223 +7,211 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
 
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50">
+
+<!-- NAVBAR -->
+<div class="bg-white border-b px-6 py-4 flex justify-between items-center">
+  <h1 class="text-lg font-semibold text-gray-800">📋 Leads</h1>
+</div>
+
+<div class="p-6">
+
+  <!-- ADD LEAD -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
+
+    <h2 class="text-lg font-semibold mb-4">Add New Lead</h2>
+
+    <div class="grid md:grid-cols-4 gap-3">
+
+      <input id="name" placeholder="Name" class="input"/>
+      <input id="phone" placeholder="Phone" class="input"/>
+      <input id="email" placeholder="Email" class="input"/>
+      <input id="city" placeholder="City" class="input"/>
+
+      <input id="property" placeholder="Property Interest" class="input"/>
+      <input id="budget" placeholder="Budget" class="input"/>
+      <input id="source" placeholder="Source" class="input"/>
+      <input id="notes" placeholder="Notes" class="input"/>
+
+      <button onclick="addLead()"
+        class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 transition">
+        Add Lead
+      </button>
+
+    </div>
+
+  </div>
 
 
-<h1 class="text-2xl font-bold mb-6">CRM Leads</h1>
+  <!-- LEADS TABLE -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm">
 
+    <div class="flex justify-between mb-4">
+      <h2 class="text-lg font-semibold">All Leads</h2>
+      <input id="search"
+        placeholder="Search..."
+        class="input w-64"
+        onkeyup="searchLeads()">
+    </div>
 
-<!-- ADD LEAD FORM -->
+    <div class="overflow-x-auto">
 
-<div class="bg-white p-4 rounded shadow mb-6">
+      <table class="w-full text-sm">
 
-<h2 class="font-bold mb-4">Add New Lead</h2>
+        <thead>
+          <tr class="border-b text-gray-500">
+            <th class="text-left p-3">Name</th>
+            <th class="text-left p-3">Phone</th>
+            <th class="text-left p-3">City</th>
+            <th class="text-left p-3">Budget</th>
+            <th class="text-left p-3">Status</th>
+          </tr>
+        </thead>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <tbody id="leadTable"></tbody>
 
-<input id="name" placeholder="Name" class="border p-2 rounded">
+      </table>
 
-<input id="phone" placeholder="Phone" class="border p-2 rounded">
+    </div>
 
-<input id="email" placeholder="Email" class="border p-2 rounded">
-
-<input id="city" placeholder="City" class="border p-2 rounded">
-
-<input id="property" placeholder="Property Interest" class="border p-2 rounded">
-
-<input id="budget" placeholder="Budget" class="border p-2 rounded">
-
-<input id="source" placeholder="Lead Source" class="border p-2 rounded">
-
-<input id="notes" placeholder="Notes" class="border p-2 rounded">
-
-<button onclick="addLead()"
-class="bg-blue-500 text-white p-2 rounded">
-Add Lead
-</button>
+  </div>
 
 </div>
 
-</div>
 
-
-<!-- LEADS TABLE -->
-
-<div class="bg-white p-4 rounded shadow">
-
-<table class="w-full">
-
-<thead>
-
-<tr class="border-b">
-
-<th>Name</th>
-<th>Phone</th>
-<th>City</th>
-<th>Budget</th>
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody id="leadTable">
-
-</tbody>
-
-</table>
-
-</div>
-
+<style>
+.input{
+  border:1px solid #e5e7eb;
+  padding:8px;
+  border-radius:8px;
+  outline:none;
+}
+.input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,0.2);
+}
+</style>
 
 
 <script>
 
+/* ===============================
+   AUTH CHECK
+================================ */
 
-// AUTO API SWITCH
-const API_BASE =
- location.hostname === "localhost"
-  ? "http://localhost:3000"
-  : "https://your-backend-url.com";
+const token = localStorage.getItem("token");
+
+if(!token){
+  window.location = "login.html";
+}
 
 
+/* ===============================
+   SEARCH
+================================ */
 
-// LOAD LEADS
+function searchLeads(){
+ const input = document.getElementById("search").value.toLowerCase()
+ const rows = document.querySelectorAll("#leadTable tr")
+
+ rows.forEach(row=>{
+  row.style.display =
+   row.innerText.toLowerCase().includes(input) ? "" : "none"
+ })
+}
+
+
+/* ===============================
+   LOAD LEADS
+================================ */
 
 async function loadLeads(){
 
- const res = await fetch(`${API_BASE}/leads/all`);
-
- const data = await res.json();
+ const data = await apiRequest("/leads/all");
 
  const table = document.getElementById("leadTable");
-
  table.innerHTML = "";
 
  data.forEach(lead => {
 
   table.innerHTML += `
 
-  <tr class="border-b">
+<tr class="border-b hover:bg-gray-50">
 
-  <td>${lead.name}</td>
+<td class="p-3 font-medium">${lead.name}</td>
+<td class="p-3">${lead.phone}</td>
+<td class="p-3">${lead.city || ""}</td>
+<td class="p-3">${lead.budget || ""}</td>
 
-  <td>${lead.phone}</td>
+<td class="p-3">
 
-  <td>${lead.city || ""}</td>
+<select
+ class="border rounded p-1"
+ onchange="updateStatus(${lead.id},this.value)">
 
-  <td>${lead.budget || ""}</td>
+<option ${lead.status==="New"?"selected":""}>New</option>
+<option ${lead.status==="Interested"?"selected":""}>Interested</option>
+<option ${lead.status==="Site Visit"?"selected":""}>Site Visit</option>
+<option ${lead.status==="Deal Closed"?"selected":""}>Deal Closed</option>
+<option ${lead.status==="Lost Lead"?"selected":""}>Lost Lead</option>
 
-  <td>
+</select>
 
-  <select onchange="updateStatus(${lead.id},this.value)"
-  class="border p-1">
+</td>
 
-  <option ${lead.status==="New"?"selected":""}>New</option>
+</tr>
 
-  <option ${lead.status==="Interested"?"selected":""}>
-  Interested
-  </option>
-
-  <option ${lead.status==="Site Visit"?"selected":""}>
-  Site Visit
-  </option>
-
-  <option ${lead.status==="Deal Closed"?"selected":""}>
-  Deal Closed
-  </option>
-
-  <option ${lead.status==="Lost Lead"?"selected":""}>
-  Lost Lead
-  </option>
-
-  </select>
-
-  </td>
-
-  </tr>
-
-  `;
+`;
 
  });
 
 }
 
 
-
-// ADD LEAD
+/* ===============================
+   ADD LEAD
+================================ */
 
 async function addLead(){
 
  const lead = {
 
   name:document.getElementById("name").value,
-
   phone:document.getElementById("phone").value,
-
   email:document.getElementById("email").value,
-
   city:document.getElementById("city").value,
-
-  property_interest:
-   document.getElementById("property").value,
-
+  property_interest:document.getElementById("property").value,
   budget:document.getElementById("budget").value,
-
   source:document.getElementById("source").value,
-
   notes:document.getElementById("notes").value
 
  };
 
- await fetch(`${API_BASE}/leads/add`,{
-
-  method:"POST",
-
-  headers:{
-   "Content-Type":"application/json"
-  },
-
-  body:JSON.stringify(lead)
-
- });
+ await apiRequest("/leads/add","POST",lead);
 
  loadLeads();
-
 }
 
 
-
-// UPDATE STATUS
+/* ===============================
+   UPDATE STATUS
+================================ */
 
 async function updateStatus(id,status){
 
- await fetch(`${API_BASE}/leads/status/${id}`,{
-
-  method:"PUT",
-
-  headers:{
-   "Content-Type":"application/json"
-  },
-
-  body:JSON.stringify({status})
-
- });
+ await apiRequest(`/leads/status/${id}`,"PUT",{status});
 
 }
 
 
-
-// INITIAL LOAD
-
+/* INIT */
 loadLeads();
 
-
 </script>
-
 
 </body>
 </html>
