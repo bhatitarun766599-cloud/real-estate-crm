@@ -4,9 +4,8 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-
 /* ===============================
-   ROUND ROBIN EMPLOYEE ASSIGNMENT
+   ROUND ROBIN ASSIGNMENT
 ================================ */
 async function getNextEmployee() {
 
@@ -37,7 +36,6 @@ async function getNextEmployee() {
   return nextEmployee;
 }
 
-
 /* ===============================
    ADD LEAD (AUTO ASSIGN)
 ================================ */
@@ -55,12 +53,22 @@ router.post("/add", async (req, res) => {
       source
     } = req.body;
 
+    // 🚫 Duplicate check
+    const exists = await pool.query(
+      "SELECT id FROM leads WHERE phone=$1",
+      [phone]
+    );
+
+    if (exists.rows.length > 0) {
+      return res.json({ message: "Duplicate lead skipped" });
+    }
+
     const employee = await getNextEmployee();
 
     const newLead = await pool.query(
       `INSERT INTO leads
-      (name,phone,email,city,property_interest,budget,notes,source,assigned_to)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      (name,phone,email,city,property_interest,budget,notes,source,assigned_to,status)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'new')
       RETURNING *`,
       [name,phone,email,city,property_interest,budget,notes,source,employee]
     );
@@ -68,109 +76,128 @@ router.post("/add", async (req, res) => {
     res.json(newLead.rows[0]);
 
   } catch (err) {
-
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: "Failed to add lead" });
-
   }
 });
 
-
 /* ===============================
-   GET MY LEADS (EMPLOYEE)
+   GET LEADS (ROLE BASED)
 ================================ */
-router.get("/my", auth, async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
 
-    const leads = await pool.query(
-      "SELECT * FROM leads WHERE assigned_to=$1 ORDER BY created_at DESC",
-      [req.user.id]
-    );
+    let result;
 
-    res.json(leads.rows);
+    if (req.user.role === "manager") {
+      // 👨‍💼 Manager → all leads
+      result = await pool.query(
+        "SELECT * FROM leads ORDER BY created_at DESC"
+      );
+    } else {
+      // 👨‍💻 Employee → only own
+      result = await pool.query(
+        "SELECT * FROM leads WHERE assigned_to=$1 ORDER BY created_at DESC",
+        [req.user.id]
+      );
+    }
+
+    res.json(result.rows);
 
   } catch (err) {
-
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch leads" });
-
   }
 });
 
-
 /* ===============================
-   UPDATE STATUS
+   DASHBOARD STATS (TODAY/YESTERDAY)
 ================================ */
-router.put("/status/:id", auth, async (req, res) => {
+router.get("/stats", auth, async (req, res) => {
   try {
 
-    const { status } = req.body;
+    let condition =
+      req.user.role === "manager"
+        ? ""
+        : `AND assigned_to=${req.user.id}`;
 
-    const lead = await pool.query(
-      "UPDATE leads SET status=$1 WHERE id=$2 AND assigned_to=$3 RETURNING *",
-      [status, req.params.id, req.user.id]
+    const today = await pool.query(
+      `SELECT COUNT(*) FROM leads
+       WHERE DATE(created_at)=CURRENT_DATE ${condition}`
     );
+
+    const yesterday = await pool.query(
+      `SELECT COUNT(*) FROM leads
+       WHERE DATE(created_at)=CURRENT_DATE - INTERVAL '1 day' ${condition}`
+    );
+
+    res.json({
+      today: today.rows[0].count,
+      yesterday: yesterday.rows[0].count
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed stats" });
+  }
+});
+
+/* ===============================
+   UPDATE STATUS + REMARK
+================================ */
+router.put("/update/:id", auth, async (req, res) => {
+  try {
+
+    const { status, remark } = req.body;
+
+    // update lead
+    const lead = await pool.query(
+      "UPDATE leads SET status=$1 WHERE id=$2 RETURNING *",
+      [status, req.params.id]
+    );
+
+    // save remark
+    if (remark) {
+      await pool.query(
+        `INSERT INTO notes (lead_id, employee_id, note)
+         VALUES ($1,$2,$3)`,
+        [req.params.id, req.user.id, remark]
+      );
+    }
 
     res.json(lead.rows[0]);
 
   } catch (err) {
-
-    console.error(err.message);
-    res.status(500).json({ error: "Failed to update status" });
-
+    console.error(err);
+    res.status(500).json({ error: "Update failed" });
   }
 });
 
-
 /* ===============================
-   ADD NOTE
-================================ */
-router.post("/note/:id", auth, async (req, res) => {
-  try {
-
-    const { note } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO notes (lead_id, employee_id, note)
-       VALUES ($1,$2,$3) RETURNING *`,
-      [req.params.id, req.user.id, note]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-
-    console.error(err.message);
-    res.status(500).json({ error: "Failed to add note" });
-
-  }
-});
-
-
-/* ===============================
-   GET NOTES
+   GET NOTES (REMARK HISTORY)
 ================================ */
 router.get("/notes/:id", auth, async (req, res) => {
   try {
 
     const result = await pool.query(
-      "SELECT * FROM notes WHERE lead_id=$1 ORDER BY created_at DESC",
+      `SELECT n.*, u.name
+       FROM notes n
+       JOIN users u ON u.id = n.employee_id
+       WHERE lead_id=$1
+       ORDER BY created_at DESC`,
       [req.params.id]
     );
 
     res.json(result.rows);
 
   } catch (err) {
-
-    console.error(err.message);
-    res.status(500).json({ error: "Failed to fetch notes" });
-
+    console.error(err);
+    res.status(500).json({ error: "Failed notes" });
   }
 });
 
-
 /* ===============================
-   ADD FOLLOWUP
+   FOLLOWUP ADD
 ================================ */
 router.post("/followup", auth, async (req, res) => {
   try {
@@ -186,37 +213,32 @@ router.post("/followup", auth, async (req, res) => {
     res.json(result.rows[0]);
 
   } catch (err) {
-
-    console.error(err.message);
-    res.status(500).json({ error: "Failed to add followup" });
-
+    console.error(err);
+    res.status(500).json({ error: "Followup failed" });
   }
 });
 
-
 /* ===============================
-   TODAY FOLLOWUPS (EMPLOYEE)
+   TODAY FOLLOWUPS
 ================================ */
-router.get("/today-followups", auth, async (req, res) => {
+router.get("/followups/today", auth, async (req, res) => {
   try {
 
     const result = await pool.query(
       `SELECT f.*, l.name, l.phone
        FROM followups f
-       JOIN leads l ON l.id = f.lead_id
-       WHERE followup_date = CURRENT_DATE AND l.assigned_to=$1`,
+       JOIN leads l ON l.id=f.lead_id
+       WHERE followup_date=CURRENT_DATE
+       AND l.assigned_to=$1`,
       [req.user.id]
     );
 
     res.json(result.rows);
 
   } catch (err) {
-
-    console.error(err.message);
-    res.status(500).json({ error: "Failed to fetch today followups" });
-
+    console.error(err);
+    res.status(500).json({ error: "Failed followups" });
   }
 });
-
 
 module.exports = router;

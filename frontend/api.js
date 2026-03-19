@@ -3,13 +3,12 @@ const API_BASE =
     ? "http://localhost:3000"
     : "https://real-estate-crm-cxtj.onrender.com";
 
-
 /* ===============================
    TOKEN HANDLING
 ================================ */
 
 function getToken(){
-  return localStorage.getItem("token"); // unified
+  return localStorage.getItem("token");
 }
 
 function setToken(token){
@@ -18,9 +17,26 @@ function setToken(token){
 
 function logout(){
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
   window.location.href = "login.html";
 }
 
+/* ===============================
+   USER HANDLING
+================================ */
+
+function setUser(user){
+  localStorage.setItem("user", JSON.stringify(user));
+}
+
+function getUser(){
+  return JSON.parse(localStorage.getItem("user"));
+}
+
+function getRole(){
+  const user = getUser();
+  return user?.role || null;
+}
 
 /* ===============================
    API BUILDER
@@ -29,7 +45,6 @@ function logout(){
 function api(path){
   return API_BASE + path;
 }
-
 
 /* ===============================
    MAIN REQUEST FUNCTION
@@ -58,7 +73,6 @@ async function apiRequest(path, method="GET", body=null){
 
     const res = await fetch(api(path), options);
 
-    // Handle unauthorized
     if(res.status === 401){
       logout();
       return;
@@ -69,9 +83,81 @@ async function apiRequest(path, method="GET", body=null){
     return data;
 
   }catch(err){
-
     console.error("API Error:", err);
-    alert("Something went wrong");
+    alert("Server error");
+  }
+}
 
+/* ===============================
+   LOGIN FUNCTION
+================================ */
+
+async function loginUser(email, password){
+
+  const res = await apiRequest("/auth/login", "POST", {
+    email,
+    password
+  });
+
+  if(res && res.token){
+
+    setToken(res.token);
+    setUser(res.user);
+
+    // 🔥 Role based redirect
+    if(res.user.role === "manager"){
+      window.location.href = "dashboard.html";
+    }else{
+      window.location.href = "employee-dashboard.html";
+    }
+
+  }else{
+    alert(res?.error || "Login failed");
+  }
+}
+
+/* ===============================
+   PROTECT PAGE (AUTO CHECK)
+================================ */
+
+async function protectPage(){
+
+  const token = getToken();
+
+  if(!token){
+    window.location.href = "login.html";
+    return;
+  }
+
+  const res = await apiRequest("/auth/me");
+
+  if(!res || !res.user){
+    logout();
+    return;
+  }
+
+  setUser(res.user);
+}
+
+/* ===============================
+   ROLE BASE PAGE CONTROL
+================================ */
+
+function requireManager(){
+
+  const role = getRole();
+
+  if(role !== "manager"){
+    alert("Access denied");
+    window.location.href = "employee-dashboard.html";
+  }
+}
+
+function requireEmployee(){
+
+  const role = getRole();
+
+  if(role !== "employee"){
+    window.location.href = "dashboard.html";
   }
 }

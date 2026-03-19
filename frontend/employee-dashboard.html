@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<title>My Leads</title>
+<title>Employee Dashboard</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -15,11 +15,26 @@
 
 <!-- NAVBAR -->
 <div class="bg-white border-b px-6 py-4 flex justify-between items-center">
-  <h1 class="text-lg font-semibold text-gray-800">📋 My Leads</h1>
+  <h1 class="text-lg font-semibold text-gray-800">👨‍💻 My Dashboard</h1>
   <button onclick="logout()" class="text-red-500 text-sm">Logout</button>
 </div>
 
 <div class="p-6">
+
+  <!-- STATS -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm">Today's Leads</p>
+      <h2 id="todayCount" class="text-2xl font-bold">0</h2>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm">Yesterday</p>
+      <h2 id="yesterdayCount" class="text-2xl font-bold">0</h2>
+    </div>
+
+  </div>
 
   <!-- SEARCH -->
   <div class="mb-4 flex justify-between">
@@ -38,9 +53,10 @@
         <tr class="border-b text-gray-500">
           <th class="p-3 text-left">Name</th>
           <th class="p-3 text-left">Phone</th>
-          <th class="p-3 text-left">City</th>
+          <th class="p-3 text-left">Source</th>
+          <th class="p-3 text-left">Budget</th>
           <th class="p-3 text-left">Status</th>
-          <th class="p-3 text-left">Action</th>
+          <th class="p-3 text-left">Actions</th>
         </tr>
       </thead>
 
@@ -56,20 +72,14 @@
 <script>
 
 /* ===============================
-   AUTH CHECK
+   PROTECT PAGE
 ================================ */
-
-const token = localStorage.getItem("token");
-
-if(!token){
-  window.location = "login.html";
-}
-
+protectPage();
+requireEmployee();
 
 /* ===============================
    SEARCH
 ================================ */
-
 function searchLeads(){
  const input = document.getElementById("search").value.toLowerCase()
  const rows = document.querySelectorAll("#leadTable tr")
@@ -80,14 +90,24 @@ function searchLeads(){
  })
 }
 
+/* ===============================
+   LOAD STATS
+================================ */
+async function loadStats(){
+
+ const data = await apiRequest("/leads/stats");
+
+ document.getElementById("todayCount").innerText = data.today;
+ document.getElementById("yesterdayCount").innerText = data.yesterday;
+
+}
 
 /* ===============================
-   LOAD LEADS (JWT BASED)
+   LOAD LEADS
 ================================ */
-
 async function loadLeads(){
 
- const leads = await apiRequest("/leads/my");
+ const leads = await apiRequest("/leads");
 
  const table = document.getElementById("leadTable");
  table.innerHTML = "";
@@ -99,20 +119,29 @@ async function loadLeads(){
 <tr class="border-b hover:bg-gray-50">
 
 <td class="p-3 font-medium">${l.name}</td>
-<td class="p-3">${l.phone}</td>
-<td class="p-3">${l.city || ""}</td>
+
+<td class="p-3">
+  ${l.phone}
+  <div class="flex gap-2 mt-1">
+    <a href="tel:${l.phone}" class="text-green-600 text-xs">📞 Call</a>
+    <a href="https://wa.me/${l.phone}" target="_blank" class="text-blue-600 text-xs">💬 WhatsApp</a>
+  </div>
+</td>
+
+<td class="p-3">${l.source || "-"}</td>
+<td class="p-3">${l.budget || "-"}</td>
 
 <td class="p-3">
 
 <select
  class="border rounded p-1"
- onchange="updateStatus(${l.id},this.value)">
+ onchange="updateLead(${l.id}, this.value)">
 
-<option ${l.status==="New"?"selected":""}>New</option>
-<option ${l.status==="Contacted"?"selected":""}>Contacted</option>
-<option ${l.status==="Interested"?"selected":""}>Interested</option>
-<option ${l.status==="Not Interested"?"selected":""}>Not Interested</option>
-<option ${l.status==="Closed"?"selected":""}>Closed</option>
+<option ${l.status==="new"?"selected":""}>new</option>
+<option ${l.status==="contacted"?"selected":""}>contacted</option>
+<option ${l.status==="interested"?"selected":""}>interested</option>
+<option ${l.status==="not_interested"?"selected":""}>not_interested</option>
+<option ${l.status==="closed"?"selected":""}>closed</option>
 
 </select>
 
@@ -120,12 +149,14 @@ async function loadLeads(){
 
 <td class="p-3">
 
-<button
- onclick="addFollowup(${l.id})"
- class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+<button onclick="addRemark(${l.id})"
+ class="bg-gray-200 px-2 py-1 rounded text-xs mr-2">
+ Remark
+</button>
 
-Follow-up
-
+<button onclick="addFollowup(${l.id})"
+ class="bg-green-500 text-white px-2 py-1 rounded text-xs">
+ Follow-up
 </button>
 
 </td>
@@ -137,36 +168,58 @@ Follow-up
 
 }
 
-
 /* ===============================
-   UPDATE STATUS
+   UPDATE STATUS + REMARK
 ================================ */
+async function updateLead(id,status){
 
-async function updateStatus(id,status){
- await apiRequest(`/leads/status/${id}`,"PUT",{status})
+ const remark = prompt("Add remark (optional)");
+
+ await apiRequest(`/leads/update/${id}`, "PUT", {
+  status,
+  remark
+ });
+
 }
 
+/* ===============================
+   ADD REMARK
+================================ */
+async function addRemark(id){
+
+ const remark = prompt("Enter remark");
+
+ if(!remark) return;
+
+ await apiRequest(`/leads/update/${id}`, "PUT", {
+  status: "contacted",
+  remark
+ });
+
+ alert("Saved");
+
+}
 
 /* ===============================
    FOLLOWUP
 ================================ */
-
 async function addFollowup(id){
 
- const date = prompt("Follow-up date YYYY-MM-DD")
- const notes = prompt("Notes")
+ const date = prompt("Follow-up date (YYYY-MM-DD)");
+ const notes = prompt("Notes");
 
- await apiRequest("/leads/followup","POST",{
+ await apiRequest("/leads/followup", "POST", {
   lead_id:id,
   followup_date:date,
   notes:notes
- })
+ });
 
- alert("Follow-up added")
+ alert("Follow-up added");
+
 }
 
-
 /* INIT */
+loadStats();
 loadLeads();
 
 </script>

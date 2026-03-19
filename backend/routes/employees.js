@@ -1,134 +1,144 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const pool = require("../db");
 const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-
 /* ===============================
-   ADD EMPLOYEE
+   ADD EMPLOYEE (MANAGER ONLY)
 ================================ */
-router.post("/add", async (req, res) => {
+router.post("/add", auth, async (req, res) => {
   try {
+
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
+    }
 
     const { name, email, password } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO employees (name,email,password,status)
-       VALUES ($1,$2,$3,'active')
-       RETURNING id,name,email`,
+      `INSERT INTO users (name,email,password,role)
+       VALUES ($1,$2,$3,'employee')
+       RETURNING id,name,email,role`,
       [name, email, hashedPassword]
     );
 
     res.json(result.rows[0]);
 
   } catch (err) {
-
     console.error(err.message);
-    res.status(500).send("Server Error");
-
+    res.status(500).json({ error: "Failed to add employee" });
   }
 });
 
-
 /* ===============================
-   EMPLOYEE LOGIN
+   GET ALL EMPLOYEES + STATS
 ================================ */
-router.post("/login", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
 
-    const { email, password } = req.body;
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
+    }
 
     const result = await pool.query(
-      "SELECT * FROM employees WHERE email=$1",
-      [email]
+      `SELECT u.id,u.name,u.email,u.role,
+        COUNT(l.id) as total_leads
+       FROM users u
+       LEFT JOIN leads l ON l.assigned_to = u.id
+       WHERE u.role='employee'
+       GROUP BY u.id
+       ORDER BY u.id`
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ message: "Invalid email" });
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+});
+
+/* ===============================
+   GET SINGLE EMPLOYEE DETAILS
+================================ */
+router.get("/:id", auth, async (req, res) => {
+  try {
+
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
     }
 
-    const employee = result.rows[0];
-
-    const validPassword = await bcrypt.compare(
-      password,
-      employee.password
+    const employee = await pool.query(
+      "SELECT id,name,email FROM users WHERE id=$1 AND role='employee'",
+      [req.params.id]
     );
 
-    if (!validPassword) {
-      return res.status(401).json({ message: "Invalid password" });
-    }
-
-    const token = jwt.sign(
-      { id: employee.id, role: "employee" },
-      process.env.JWT_SECRET || "crm_secret",
-      { expiresIn: "7d" }
+    const leads = await pool.query(
+      "SELECT * FROM leads WHERE assigned_to=$1 ORDER BY created_at DESC",
+      [req.params.id]
     );
 
     res.json({
-      message: "Login successful",
-      token,
-      employee: {
-        id: employee.id,
-        name: employee.name,
-        email: employee.email
-      }
+      employee: employee.rows[0],
+      leads: leads.rows
     });
 
   } catch (err) {
-
     console.error(err.message);
-    res.status(500).send("Server Error");
-
+    res.status(500).json({ error: "Failed employee details" });
   }
 });
 
-
 /* ===============================
-   GET MY PROFILE
+   UPDATE EMPLOYEE
 ================================ */
-router.get("/me", auth, async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
 
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { name, email } = req.body;
+
     const result = await pool.query(
-      "SELECT id,name,email FROM employees WHERE id=$1",
-      [req.user.id]
+      "UPDATE users SET name=$1,email=$2 WHERE id=$3 RETURNING *",
+      [name, email, req.params.id]
     );
 
     res.json(result.rows[0]);
 
   } catch (err) {
-
     console.error(err.message);
-    res.status(500).send("Server Error");
-
+    res.status(500).json({ error: "Update failed" });
   }
 });
-
 
 /* ===============================
-   GET ALL EMPLOYEES (FOR ADMIN LATER)
+   DELETE EMPLOYEE
 ================================ */
-router.get("/all", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
 
-    const employees = await pool.query(
-      "SELECT id,name,email,status FROM employees ORDER BY id"
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    await pool.query(
+      "DELETE FROM users WHERE id=$1 AND role='employee'",
+      [req.params.id]
     );
 
-    res.json(employees.rows);
+    res.json({ message: "Employee deleted" });
 
   } catch (err) {
-
     console.error(err.message);
-    res.status(500).send("Server Error");
-
+    res.status(500).json({ error: "Delete failed" });
   }
 });
-
 
 module.exports = router;

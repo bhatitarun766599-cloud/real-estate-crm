@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<title>CRM Dashboard</title>
+<title>Manager Dashboard</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -15,28 +15,28 @@
 
 <!-- NAVBAR -->
 <div class="bg-white border-b px-6 py-4 flex justify-between items-center">
-  <h1 class="text-xl font-semibold text-gray-800">🏠 CRM Dashboard</h1>
+  <h1 class="text-xl font-semibold text-gray-800">👨‍💼 Manager Dashboard</h1>
   <button onclick="logout()" class="text-red-500 text-sm">Logout</button>
 </div>
 
 <div class="p-6">
 
-  <!-- FOLLOWUPS -->
-  <div class="grid md:grid-cols-3 gap-6 mb-6">
+  <!-- STATS -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
 
-    <div class="bg-white p-5 rounded-2xl shadow-sm">
-      <h2 class="font-semibold mb-3 text-gray-700">Today</h2>
-      <ul id="todayFollowups" class="text-sm space-y-1"></ul>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm">Total Leads</p>
+      <h2 id="totalLeads" class="text-2xl font-bold">0</h2>
     </div>
 
-    <div class="bg-white p-5 rounded-2xl shadow-sm">
-      <h2 class="font-semibold mb-3 text-red-500">Missed</h2>
-      <ul id="missedFollowups" class="text-sm space-y-1"></ul>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm">Today</p>
+      <h2 id="todayLeads" class="text-2xl font-bold">0</h2>
     </div>
 
-    <div class="bg-white p-5 rounded-2xl shadow-sm">
-      <h2 class="font-semibold mb-3 text-green-600">Upcoming</h2>
-      <ul id="upcomingFollowups" class="text-sm space-y-1"></ul>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm">Yesterday</p>
+      <h2 id="yesterdayLeads" class="text-2xl font-bold">0</h2>
     </div>
 
   </div>
@@ -44,31 +44,20 @@
   <!-- ADD LEAD -->
   <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
 
-    <h2 class="text-lg font-semibold mb-4">Add New Lead</h2>
+    <h2 class="text-lg font-semibold mb-4">Add Lead</h2>
 
     <div class="grid md:grid-cols-3 gap-3">
 
-      <input id="name" placeholder="Name"
-        class="border p-2 rounded">
-
-      <input id="phone" placeholder="Phone"
-        class="border p-2 rounded">
-
-      <input id="city" placeholder="City"
-        class="border p-2 rounded">
-
-      <input id="property"
-        placeholder="Property Interest"
-        class="border p-2 rounded">
-
-      <input id="budget"
-        placeholder="Budget"
-        class="border p-2 rounded">
+      <input id="name" placeholder="Name" class="border p-2 rounded">
+      <input id="phone" placeholder="Phone" class="border p-2 rounded">
+      <input id="city" placeholder="City" class="border p-2 rounded">
+      <input id="property" placeholder="Property" class="border p-2 rounded">
+      <input id="budget" placeholder="Budget" class="border p-2 rounded">
 
     </div>
 
     <button onclick="addLead()"
-      class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition">
+      class="mt-4 bg-blue-600 text-white px-5 py-2 rounded">
       Add Lead
     </button>
 
@@ -78,7 +67,7 @@
   <div class="bg-white p-6 rounded-2xl shadow-sm">
 
     <div class="flex justify-between mb-4">
-      <h2 class="text-lg font-semibold">Leads</h2>
+      <h2 class="text-lg font-semibold">All Leads</h2>
       <input id="search"
         placeholder="Search..."
         class="border p-2 rounded text-sm"
@@ -91,13 +80,12 @@
 
         <thead>
           <tr class="text-gray-500 border-b">
-            <th class="text-left p-2">Name</th>
-            <th class="text-left p-2">Phone</th>
-            <th class="text-left p-2">City</th>
-            <th class="text-left p-2">Property</th>
-            <th class="text-left p-2">Budget</th>
-            <th class="text-left p-2">Status</th>
-            <th class="text-left p-2">Action</th>
+            <th class="p-2 text-left">Name</th>
+            <th class="p-2 text-left">Phone</th>
+            <th class="p-2 text-left">Source</th>
+            <th class="p-2 text-left">Budget</th>
+            <th class="p-2 text-left">Status</th>
+            <th class="p-2 text-left">Actions</th>
           </tr>
         </thead>
 
@@ -113,7 +101,15 @@
 
 <script>
 
-/* SEARCH */
+/* ===============================
+   PROTECT
+================================ */
+protectPage();
+requireManager();
+
+/* ===============================
+   SEARCH
+================================ */
 function searchLeads(){
  const input = document.getElementById("search").value.toLowerCase()
  const rows = document.querySelectorAll("#leadsTable tr")
@@ -124,7 +120,23 @@ function searchLeads(){
  })
 }
 
-/* ADD LEAD */
+/* ===============================
+   LOAD STATS
+================================ */
+async function loadStats(){
+
+ const stats = await apiRequest("/leads/stats");
+ const leads = await apiRequest("/leads");
+
+ document.getElementById("totalLeads").innerText = leads.length;
+ document.getElementById("todayLeads").innerText = stats.today;
+ document.getElementById("yesterdayLeads").innerText = stats.yesterday;
+
+}
+
+/* ===============================
+   ADD LEAD
+================================ */
 async function addLead(){
 
  const lead = {
@@ -137,111 +149,105 @@ async function addLead(){
   source:"Manual"
  };
 
- await apiRequest("/leads/add","POST",lead)
+ await apiRequest("/leads/add","POST",lead);
 
- loadLeads()
+ loadLeads();
+ loadStats();
 }
 
-/* STATUS */
-async function updateStatus(id,status){
- await apiRequest(`/leads/status/${id}`,"PUT",{status})
-}
-
-/* FOLLOWUP */
-async function addFollowup(id){
-
- const date = prompt("Followup date YYYY-MM-DD")
- const notes = prompt("Notes")
-
- await apiRequest("/leads/followup","POST",{
-  lead_id:id,
-  followup_date:date,
-  notes:notes
- })
-
- loadFollowups()
-}
-
-/* LOAD LEADS */
+/* ===============================
+   LOAD LEADS
+================================ */
 async function loadLeads(){
 
- const leads = await apiRequest("/leads/all")
- const table = document.getElementById("leadsTable")
+ const leads = await apiRequest("/leads");
+ const table = document.getElementById("leadsTable");
 
- table.innerHTML=""
+ table.innerHTML="";
 
- leads.forEach(lead=>{
+ leads.forEach(l=>{
 
  table.innerHTML += `
+
 <tr class="border-b hover:bg-gray-50">
 
-<td class="p-2 font-medium">${lead.name}</td>
-<td class="p-2">${lead.phone}</td>
-<td class="p-2">${lead.city || ""}</td>
-<td class="p-2">${lead.property_interest || ""}</td>
-<td class="p-2">${lead.budget || ""}</td>
+<td class="p-2 font-medium">${l.name}</td>
 
 <td class="p-2">
+  ${l.phone}
+  <div class="flex gap-2 mt-1">
+    <a href="tel:${l.phone}" class="text-green-600 text-xs">📞</a>
+    <a href="https://wa.me/${l.phone}" target="_blank" class="text-blue-600 text-xs">💬</a>
+  </div>
+</td>
+
+<td class="p-2">${l.source || "-"}</td>
+<td class="p-2">${l.budget || "-"}</td>
+
+<td class="p-2">
+
 <select
  class="border rounded p-1"
- onchange="updateStatus(${lead.id},this.value)">
+ onchange="updateLead(${l.id},this.value)">
 
-<option ${lead.status==="New"?"selected":""}>New</option>
-<option ${lead.status==="Interested"?"selected":""}>Interested</option>
-<option ${lead.status==="Site Visit"?"selected":""}>Site Visit</option>
-<option ${lead.status==="Deal Closed"?"selected":""}>Deal Closed</option>
-<option ${lead.status==="Lost Lead"?"selected":""}>Lost Lead</option>
+<option ${l.status==="new"?"selected":""}>new</option>
+<option ${l.status==="contacted"?"selected":""}>contacted</option>
+<option ${l.status==="interested"?"selected":""}>interested</option>
+<option ${l.status==="closed"?"selected":""}>closed</option>
 
 </select>
+
 </td>
 
 <td class="p-2">
-<button
- onclick="addFollowup(${lead.id})"
- class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+<button onclick="addFollowup(${l.id})"
+ class="bg-green-500 text-white px-2 py-1 rounded text-xs">
  Follow-up
 </button>
 </td>
 
 </tr>
+
 `
  })
 
 }
 
-/* FOLLOWUPS */
-async function loadFollowups(){
- const data = await apiRequest("/leads/today-followups")
- const list = document.getElementById("todayFollowups")
- list.innerHTML=""
- data.forEach(f=>{
-  list.innerHTML += `<li>${f.name}</li>`
- })
+/* ===============================
+   UPDATE
+================================ */
+async function updateLead(id,status){
+
+ const remark = prompt("Remark (optional)");
+
+ await apiRequest(`/leads/update/${id}`, "PUT", {
+  status,
+  remark
+ });
+
 }
 
-async function loadMissed(){
- const data = await apiRequest("/leads/missed-followups")
- const list = document.getElementById("missedFollowups")
- list.innerHTML=""
- data.forEach(f=>{
-  list.innerHTML += `<li>${f.name}</li>`
- })
-}
+/* ===============================
+   FOLLOWUP
+================================ */
+async function addFollowup(id){
 
-async function loadUpcoming(){
- const data = await apiRequest("/leads/upcoming-followups")
- const list = document.getElementById("upcomingFollowups")
- list.innerHTML=""
- data.forEach(f=>{
-  list.innerHTML += `<li>${f.name}</li>`
- })
+ const date = prompt("Date YYYY-MM-DD");
+ const notes = prompt("Notes");
+
+ await apiRequest("/leads/followup","POST",{
+  lead_id:id,
+  followup_date:date,
+  notes:notes
+ });
+
+ alert("Follow-up added");
+
 }
 
 /* INIT */
-loadLeads()
-loadFollowups()
-loadMissed()
-loadUpcoming()
+loadStats();
+loadLeads();
 
 </script>
 
