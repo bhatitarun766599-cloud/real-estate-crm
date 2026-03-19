@@ -5,6 +5,7 @@ const path = require("path");
 const authRoutes = require("./routes/auth");
 const leadRoutes = require("./routes/leads");
 const employeeRoutes = require("./routes/employees");
+const setupRoutes = require("./routes/setup");
 const syncLeads = require("./sheetSync");
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/leads", leadRoutes);
 app.use("/employees", employeeRoutes);
+app.use("/setup", setupRoutes);
 
 /* ===============================
    SERVE FRONTEND (VERY IMPORTANT)
