@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const leadRoutes = require("./routes/leads");
@@ -21,7 +22,7 @@ app.use(cors({
 app.use(express.json());
 
 /* ===============================
-   ROUTES
+   API ROUTES
 ================================ */
 
 app.use("/auth", authRoutes);
@@ -29,11 +30,17 @@ app.use("/leads", leadRoutes);
 app.use("/employees", employeeRoutes);
 
 /* ===============================
-   HEALTH CHECK
+   SERVE FRONTEND (VERY IMPORTANT)
 ================================ */
 
-app.get("/", (req,res)=>{
- res.send("Real Estate CRM API Running 🚀");
+app.use(express.static(path.join(__dirname, "frontend")));
+
+/* ===============================
+   DEFAULT ROUTE (LOGIN PAGE)
+================================ */
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "login.html"));
 });
 
 /* ===============================
