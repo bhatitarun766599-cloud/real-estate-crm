@@ -2,7 +2,7 @@ const pool = require("./db");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-const SHEET_URL = https://docs.google.com/spreadsheets/d/1ipAcjDCL30_V2d2DW8rY7pSg_NM-l_M34njCW15NfEk/export?format=csv; // 👈 replace
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1ipAcjDCL30_V2d2DW8rY7pSg_NM-l_M34njCW15NfEk/export?format=csv"; // 👈 replace
 
 async function syncLeads() {
   try {
