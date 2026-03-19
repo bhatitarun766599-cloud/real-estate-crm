@@ -1,5 +1,4 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const { Pool } = require("pg");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));const { Pool } = require("pg");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
