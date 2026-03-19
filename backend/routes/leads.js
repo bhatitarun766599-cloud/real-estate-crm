@@ -4,26 +4,38 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-/* ===============================
-   ROUND ROBIN ASSIGNMENT
-================================ */
 async function getNextEmployee() {
 
+  // Get employees
   const employees = await pool.query(
     "SELECT id FROM employees WHERE status='active' ORDER BY id"
   );
 
   if (employees.rows.length === 0) {
-    throw new Error("No active employees found");
+    console.log("⚠️ No employees found, assigning default");
+    return 1; // fallback
   }
 
-  const rotation = await pool.query(
-    "SELECT last_employee_id FROM lead_rotation LIMIT 1"
+  // Check rotation row
+  let rotation = await pool.query(
+    "SELECT * FROM lead_rotation LIMIT 1"
   );
 
-  let last = rotation.rows[0]?.last_employee_id || null;
+  // If no row → create one
+  if (rotation.rows.length === 0) {
+    await pool.query(
+      "INSERT INTO lead_rotation (last_employee_id) VALUES ($1)",
+      [employees.rows[0].id]
+    );
+    return employees.rows[0].id;
+  }
+
+  let last = rotation.rows[0].last_employee_id;
 
   let index = employees.rows.findIndex(e => e.id === last);
+
+  // If not found → reset
+  if (index === -1) index = 0;
 
   let nextEmployee =
     employees.rows[(index + 1) % employees.rows.length].id;
@@ -35,6 +47,7 @@ async function getNextEmployee() {
 
   return nextEmployee;
 }
+
 
 /* ===============================
    ADD LEAD (AUTO ASSIGN)
