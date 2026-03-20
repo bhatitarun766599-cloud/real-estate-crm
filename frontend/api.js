@@ -131,10 +131,10 @@ async function protectPage(){
 
   const res = await apiRequest("/auth/me");
 
-  if(!res || !res.user){
-    logout();
-    return;
-  }
+  if(res.status === 401){
+  console.log("Unauthorized - ignoring for now");
+  return null; // ❌ no logout
+}
 
   setUser(res.user);
 }
