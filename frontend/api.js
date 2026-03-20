@@ -120,24 +120,43 @@ async function loginUser(email, password){
    PROTECT PAGE (AUTO CHECK)
 ================================ */
 
-async function protectPage(){
+async function apiRequest(path, method="GET", body=null){
 
-  const token = getToken();
+  try{
 
-  if(!token){
-    window.location.href = "login.html";
-    return;
+    const options = {
+      method,
+      headers:{
+        "Content-Type":"application/json"
+      }
+    };
+
+    const token = getToken();
+
+    if(token){
+      options.headers["Authorization"] = "Bearer " + token;
+    }
+
+    if(body){
+      options.body = JSON.stringify(body);
+    }
+
+    const res = await fetch(api(path), options);
+
+    // ❌ DO NOT AUTO LOGOUT
+    if(res.status === 401){
+      console.log("Unauthorized request:", path);
+      return null;
+    }
+
+    const data = await res.json();
+    return data;
+
+  }catch(err){
+    console.error("API Error:", err);
+    return null;
   }
-
-
-  if(res.status === 401){
-  console.log("Unauthorized - ignoring for now");
-  return null; // ❌ no logout
 }
-
-  setUser(res.user);
-}
-
 /* ===============================
    ROLE BASE PAGE CONTROL
 ================================ */
