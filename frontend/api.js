@@ -60,7 +60,7 @@ async function apiRequest(path, method="GET", body=null){
       }
     };
 
-    const token = getToken();
+    const token = localStorage.getItem("token");
 
     if(token){
       options.headers["Authorization"] = "Bearer " + token;
@@ -70,20 +70,20 @@ async function apiRequest(path, method="GET", body=null){
       options.body = JSON.stringify(body);
     }
 
-    const res = await fetch(api(path), options);
+    const res = await fetch(API_BASE + path, options);
 
+    // 🔥 IMPORTANT FIX
     if(res.status === 401){
-      logout();
-      return;
+      console.log("Unauthorized → clearing token");
+      localStorage.removeItem("token");
+      return null; // ❌ NO redirect
     }
 
-    const data = await res.json();
-
-    return data;
+    return await res.json();
 
   }catch(err){
     console.error("API Error:", err);
-    alert("Server error");
+    return null;
   }
 }
 
@@ -130,7 +130,7 @@ async function apiRequest(path, method="GET", body=null){
       }
     };
 
-    const token = getToken();
+    const token = localStorage.getItem("token");
 
     if(token){
       options.headers["Authorization"] = "Bearer " + token;
@@ -140,16 +140,16 @@ async function apiRequest(path, method="GET", body=null){
       options.body = JSON.stringify(body);
     }
 
-    const res = await fetch(api(path), options);
+    const res = await fetch(API_BASE + path, options);
 
-    // ❌ DO NOT AUTO LOGOUT
+    // 🔥 IMPORTANT FIX
     if(res.status === 401){
-      console.log("Unauthorized request:", path);
-      return null;
+      console.log("Unauthorized → clearing token");
+      localStorage.removeItem("token");
+      return null; // ❌ NO redirect
     }
 
-    const data = await res.json();
-    return data;
+    return await res.json();
 
   }catch(err){
     console.error("API Error:", err);
