@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manager Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
+</head>
+
+<body class="bg-gray-100">
+
+<div class="bg-white p-4 shadow flex justify-between">
+  <h1 class="text-lg font-bold">👨‍💼 Manager Dashboard</h1>
+  <button onclick="logout()" class="text-red-500">Logout</button>
+</div>
+
+<div class="p-6">
+
+  <!-- STATS -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white p-4 rounded shadow">
+      <p>Total Leads</p>
+      <h2 id="total" class="text-2xl font-bold">0</h2>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p>Today Leads</p>
+      <h2 id="today" class="text-2xl font-bold">0</h2>
+    </div>
+  </div>
+
+  <!-- EMPLOYEE PERFORMANCE -->
+  <div class="bg-white p-4 rounded shadow">
+    <h2 class="font-semibold mb-3">Employee Performance</h2>
+    <ul id="empList"></ul>
+  </div>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if(!token){
+  window.location.href = "login.html";
+}
+
+async function loadAnalytics(){
+
+  const data = await apiRequest("/leads/analytics");
+
+  if(!data) return;
+
+  document.getElementById("total").innerText = data.total;
+  document.getElementById("today").innerText = data.today;
+
+  const list = document.getElementById("empList");
+  list.innerHTML = "";
+
+  data.employees.forEach(e=>{
+    list.innerHTML += `<li>${e.name} - ${e.total} leads</li>`;
+  });
+
+}
+
+loadAnalytics();
+
+</script>
+
+</body>
+</html>

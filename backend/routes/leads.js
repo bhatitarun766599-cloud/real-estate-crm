@@ -178,3 +178,41 @@ router.get("/stats", auth, async (req, res) => {
 });
 
 module.exports = router;
+
+/* ===============================
+   MANAGER ANALYTICS
+================================ */
+router.get("/analytics", auth, async (req, res) => {
+  try {
+
+    // Only manager
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const total = await pool.query(
+      "SELECT COUNT(*) FROM leads"
+    );
+
+    const today = await pool.query(
+      "SELECT COUNT(*) FROM leads WHERE DATE(created_at)=CURRENT_DATE"
+    );
+
+    const employees = await pool.query(
+      `SELECT e.name, COUNT(l.id) as total
+       FROM employees e
+       LEFT JOIN leads l ON l.assigned_to = e.id
+       GROUP BY e.name`
+    );
+
+    res.json({
+      total: total.rows[0].count,
+      today: today.rows[0].count,
+      employees: employees.rows
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Analytics error" });
+  }
+});
