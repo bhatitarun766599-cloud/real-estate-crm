@@ -129,7 +129,6 @@ async function protectPage(){
     return;
   }
 
-  const res = await apiRequest("/auth/me");
 
   if(res.status === 401){
   console.log("Unauthorized - ignoring for now");
