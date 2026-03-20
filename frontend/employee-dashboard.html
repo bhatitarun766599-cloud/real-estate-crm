@@ -101,6 +101,11 @@ async function loadStats(){
 
  const data = await apiRequest("/leads/stats");
 
+ if(!data){
+  console.log("Stats API failed");
+  return;
+}
+
  document.getElementById("todayCount").innerText = data.today;
  document.getElementById("yesterdayCount").innerText = data.yesterday;
 
@@ -112,6 +117,11 @@ async function loadStats(){
 async function loadLeads(){
 
  const leads = await apiRequest("/leads");
+
+ if(!leads){
+  console.log("Leads API failed");
+  return;
+}
 
  const table = document.getElementById("leadTable");
  table.innerHTML = "";
