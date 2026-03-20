@@ -49,48 +49,34 @@
    LOGIN (UPDATED)
 ================================ */
 
-async function login(){
+aasync function login(){
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  if(!email || !password){
-    document.getElementById("error").innerText = "Enter email & password";
-    return;
-  }
+  const data = await apiRequest(
+    "/auth/login",
+    "POST",
+    { email, password }
+  );
 
-  try{
+  console.log("LOGIN RESPONSE:", data); // 🔥 DEBUG
 
-    const res = await apiRequest("/auth/login", "POST", {
-      email,
-      password
-    });
+  if(data && data.token){
 
-    if(res && res.token){
+    // ✅ SAVE TOKEN
+    localStorage.setItem("token", data.token);
 
-      // ✅ SAVE TOKEN + USER
-      setToken(res.token);
-      setUser(res.user);
+    console.log("TOKEN SAVED:", localStorage.getItem("token"));
 
-      // 🔥 ROLE BASED REDIRECT
-      if(res.user.role === "manager"){
-        window.location.href = "dashboard.html";
-      }else{
-        window.location.href = "employee-dashboard.html";
-      }
+    // 🔥 REDIRECT
+    window.location.href = "employee-dashboard.html";
 
-    }else{
-      document.getElementById("error").innerText =
-        res?.error || "Login failed";
-    }
-
-  }catch(err){
-    document.getElementById("error").innerText =
-      "Server error";
+  }else{
+    alert(data?.error || "Login failed");
   }
 
 }
-
 </script>
 
 </body>
