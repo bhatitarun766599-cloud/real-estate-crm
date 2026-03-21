@@ -46,42 +46,58 @@
 <script>
 
 /* ===============================
-   LOGIN (UPDATED)
+   LOGIN FINAL (STABLE)
 ================================ */
 
 async function login(){
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  const data = await apiRequest(
-    "/auth/login",
-    "POST",
-    { email, password }
-  );
+  // Basic validation
+  if(!email || !password){
+    document.getElementById("error").innerText = "Enter email & password";
+    return;
+  }
 
-  console.log("LOGIN RESPONSE:", data);
+  try{
 
-  if(data && data.token){
+    const data = await apiRequest(
+      "/auth/login",
+      "POST",
+      { email, password }
+    );
 
-    localStorage.setItem("token", data.token);
+    console.log("LOGIN RESPONSE:", data);
 
-    console.log("TOKEN SAVED:", localStorage.getItem("token"));
+    if(data && data.token){
 
-    // ROLE BASED REDIRECT
-    if(data.user.role === "manager"){
-      window.location.href = "manager-dashboard.html";
+      // ✅ Save token
+      localStorage.setItem("token", data.token);
+
+      console.log("TOKEN SAVED:", localStorage.getItem("token"));
+
+      // ✅ Redirect by role
+      if(data.user.role === "manager"){
+        window.location.href = "manager-dashboard.html";
+      }else{
+        window.location.href = "employee-dashboard.html";
+      }
+
     }else{
-      window.location.href = "employee-dashboard.html";
+
+      document.getElementById("error").innerText =
+        data?.error || "Invalid login";
+
     }
 
-  }else{
-    document.getElementById("error").innerText =
-      data?.error || "Login failed";
+  }catch(err){
+
+    console.error("Login Error:", err);
+    document.getElementById("error").innerText = "Server error";
+
   }
 
 }
-</script>
 
-</body>
-</html>
+</script>
