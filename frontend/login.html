@@ -19,22 +19,14 @@
     CRM Login
   </h2>
 
-  <input
-    id="email"
-    placeholder="Email"
-    class="border w-full p-3 mb-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-  />
+  <input id="email" placeholder="Email"
+    class="border w-full p-3 mb-3 rounded-lg" />
 
-  <input
-    id="password"
-    type="password"
-    placeholder="Password"
-    class="border w-full p-3 mb-4 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-  />
+  <input id="password" type="password" placeholder="Password"
+    class="border w-full p-3 mb-4 rounded-lg" />
 
-  <button
-    onclick="login()"
-    class="bg-blue-600 hover:bg-blue-700 text-white w-full p-3 rounded-lg transition">
+  <button onclick="login()"
+    class="bg-blue-600 text-white w-full p-3 rounded-lg">
     Login
   </button>
 
@@ -42,42 +34,32 @@
 
 </div>
 
-
 <script>
-
-/* ===============================
-   LOGIN FINAL (STABLE)
-================================ */
 
 async function login(){
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  // Basic validation
-  if(!email || !password){
-    document.getElementById("error").innerText = "Enter email & password";
-    return;
-  }
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
   try{
 
-    const data = await apiRequest(
-      "/auth/login",
-      "POST",
-      { email, password }
+    const res = await fetch(
+      window.location.origin + "/auth/login",
+      {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ email, password })
+      }
     );
+
+    const data = await res.json();
 
     console.log("LOGIN RESPONSE:", data);
 
     if(data && data.token){
 
-      // ✅ Save token
       localStorage.setItem("token", data.token);
 
-      console.log("TOKEN SAVED:", localStorage.getItem("token"));
-
-      // ✅ Redirect by role
       if(data.user.role === "manager"){
         window.location.href = "manager-dashboard.html";
       }else{
@@ -85,19 +67,18 @@ async function login(){
       }
 
     }else{
-
       document.getElementById("error").innerText =
-        data?.error || "Invalid login";
-
+        data?.error || "Login failed";
     }
 
   }catch(err){
-
-    console.error("Login Error:", err);
+    console.error(err);
     document.getElementById("error").innerText = "Server error";
-
   }
 
 }
 
 </script>
+
+</body>
+</html>
