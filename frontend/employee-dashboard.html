@@ -72,7 +72,7 @@
 <script>
 
 /* ===============================
-   SIMPLE AUTH CHECK (NO LOOP)
+   AUTH CHECK (FINAL SAFE)
 ================================ */
 
 const token = localStorage.getItem("token");
@@ -85,57 +85,65 @@ if(!token){
    SEARCH
 ================================ */
 function searchLeads(){
- const input = document.getElementById("search").value.toLowerCase()
- const rows = document.querySelectorAll("#leadTable tr")
+ const input = document.getElementById("search").value.toLowerCase();
+ const rows = document.querySelectorAll("#leadTable tr");
 
  rows.forEach(row=>{
   row.style.display =
-   row.innerText.toLowerCase().includes(input) ? "" : "none"
- })
+   row.innerText.toLowerCase().includes(input) ? "" : "none";
+ });
 }
 
 /* ===============================
-   LOAD STATS
+   LOAD STATS (SAFE)
 ================================ */
 async function loadStats(){
 
- const data = await apiRequest("/leads/stats");
+ try{
 
- if(!data){
-  console.log("Stats API failed");
-  return;
-}
+  const data = await apiRequest("/leads/stats");
 
- document.getElementById("todayCount").innerText = data.today;
- document.getElementById("yesterdayCount").innerText = data.yesterday;
+  if(!data){
+    console.log("Stats API failed");
+    return;
+  }
+
+  document.getElementById("todayCount").innerText = data.today || 0;
+  document.getElementById("yesterdayCount").innerText = data.yesterday || 0;
+
+ }catch(err){
+  console.error("Stats Error:", err);
+ }
 
 }
 
 /* ===============================
-   LOAD LEADS
+   LOAD LEADS (SAFE)
 ================================ */
 async function loadLeads(){
 
- const leads = await apiRequest("/leads");
+ try{
 
- if(!leads){
-  console.log("Leads API failed");
-  return;
-}
+  const leads = await apiRequest("/leads");
 
- const table = document.getElementById("leadTable");
- table.innerHTML = "";
+  if(!leads){
+    console.log("Leads API failed");
+    return;
+  }
 
- leads.forEach(l=>{
+  const table = document.getElementById("leadTable");
+  table.innerHTML = "";
 
- table.innerHTML += `
+  leads.forEach(l=>{
+
+  table.innerHTML += `
 
 <tr class="border-b hover:bg-gray-50">
 
-<td class="p-3 font-medium">${l.name}</td>
+<td class="p-3 font-medium">${l.name || "-"}</td>
 
 <td class="p-3">
-  ${l.phone}
+  ${l.phone || "-"}
   <div class="flex gap-2 mt-1">
     <a href="tel:${l.phone}" class="text-green-600 text-xs">📞 Call</a>
     <a href="https://wa.me/${l.phone}" target="_blank" class="text-blue-600 text-xs">💬 WhatsApp</a>
@@ -177,8 +185,12 @@ async function loadLeads(){
 
 </tr>
 
-`
- })
+`;
+  });
+
+ }catch(err){
+  console.error("Leads Error:", err);
+ }
 
 }
 
@@ -189,10 +201,14 @@ async function updateLead(id,status){
 
  const remark = prompt("Add remark (optional)");
 
- await apiRequest(`/leads/update/${id}`, "PUT", {
-  status,
-  remark
- });
+ try{
+  await apiRequest(`/leads/update/${id}`, "PUT", {
+    status,
+    remark
+  });
+ }catch(err){
+  console.error(err);
+ }
 
 }
 
@@ -205,12 +221,15 @@ async function addRemark(id){
 
  if(!remark) return;
 
- await apiRequest(`/leads/update/${id}`, "PUT", {
-  status: "contacted",
-  remark
- });
-
- alert("Saved");
+ try{
+  await apiRequest(`/leads/update/${id}`, "PUT", {
+    status: "contacted",
+    remark
+  });
+  alert("Saved");
+ }catch(err){
+  console.error(err);
+ }
 
 }
 
@@ -222,17 +241,22 @@ async function addFollowup(id){
  const date = prompt("Follow-up date (YYYY-MM-DD)");
  const notes = prompt("Notes");
 
- await apiRequest("/leads/followup", "POST", {
-  lead_id:id,
-  followup_date:date,
-  notes:notes
- });
-
- alert("Follow-up added");
+ try{
+  await apiRequest("/leads/followup", "POST", {
+    lead_id:id,
+    followup_date:date,
+    notes:notes
+  });
+  alert("Follow-up added");
+ }catch(err){
+  console.error(err);
+ }
 
 }
 
-/* INIT */
+/* ===============================
+   INIT
+================================ */
 loadStats();
 loadLeads();
 
